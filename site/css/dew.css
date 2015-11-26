@@ -1,0 +1,25 @@
+.navbar-brand-img {
+	
+	height:35px;
+	margin-right:10px;
+	
+}
+.navbar-brand {
+	padding:8px;
+}
+.navbar-submit {
+	display:inline-block;
+}
+.navbar-search {
+	margin:10px;
+	margin-bottom:5px;
+}
+.form-group {
+	margin-bottom:10px;
+}
+.navbar-breadcrumb {
+	margin-top:30px;
+	margin-left:auto;
+	margin-right:auto;
+	max-width:1024px;
+}
