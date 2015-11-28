@@ -1,3 +1,12 @@
+a {
+	color:#3b4a6d;
+	text-decoration:underline;
+}
+a:hover {
+	color:#b02435;
+	text-decoration:none;
+}
+
 .navbar-brand-img {
 	
 	height:35px;
@@ -21,13 +30,13 @@
 	margin-top:-10px;
 	margin-left:auto;
 	margin-right:auto;
-	max-width:1024px;
+	max-width:920px;
 }
 .page-body {
 	margin-left:auto;
 	margin-right:auto;
-	max-width:1024px;
-	min-height:400px;
+	max-width:920px;
+	min-height:300px;
 }
 .page-heading {
 	margin-left:auto;
@@ -36,7 +45,9 @@
 	text-align:center;
 }
 .page-heading h3 {
-	margin-top:5px;
+	margin-top:0px;
+	margin-bottom:20px;
+	
 }
 .page-footer {
 	margin-left:auto;
@@ -47,10 +58,33 @@
 	font-size:11pt;
 	color:#999;
 }
+.page-footer-logo {
+	text-align:center;
+}
+.page-footer-logo img {
+	width:24px;
+	height:24px;
+	margin:5px;
+}
+.breadcrumb {
+}
 .breadcrumb-picker {
 	float:right;
 }
 .breadcrumb-breadcrumb {
-	width:80%;
+	width:78%;
 	display:inline-block;
+}
+.navbar-dew-line-a {
+	margin-left:10px;
+	margin-right:5px;
+	background-color:#3b4a6d;
+	height:5px;
+}
+.navbar-dew-line-b {
+	margin-left:5px;
+	margin-right:10px;
+	background-color:#b02435;
+	height:4px;
+	margin-top:2px;
 }
