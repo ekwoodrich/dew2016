@@ -1,10 +1,21 @@
+ @font-face {
+     font-family: 'StateFaceRegular';
+     src: url('fonts/stateface-regular-webfont.eot');
+     src: url('fonts/stateface-regular-webfont.eot?#iefix') format('embedded-opentype'),
+          url('fonts/stateface-regular-webfont.woff') format('woff'),
+          url('fonts/stateface-regular-webfont.ttf') format('truetype'),
+          url('fonts/stateface-regular-webfont.svg#StateFaceRegular') format('svg');
+     font-weight: normal;
+     font-style: normal;
+ }
+
+
+
 a {
 	color:#3b4a6d;
-	text-decoration:underline;
 }
 a:hover {
 	color:#b02435;
-	text-decoration:none;
 }
 
 .navbar-brand-img {
@@ -49,6 +60,10 @@ a:hover {
 	margin-bottom:20px;
 	
 }
+.icon-gop {
+	position:relative;
+	top:1pt;
+}
 .page-footer {
 	margin-left:auto;
 	margin-right:auto;
@@ -66,25 +81,23 @@ a:hover {
 	height:24px;
 	margin:5px;
 }
-.breadcrumb {
-}
 .breadcrumb-picker {
 	float:right;
 }
 .breadcrumb-breadcrumb {
-	width:78%;
+	width:74%;
 	display:inline-block;
 }
 .navbar-dew-line-a {
 	margin-left:10px;
 	margin-right:5px;
 	background-color:#3b4a6d;
-	height:5px;
+	height:2px;
 }
 .navbar-dew-line-b {
 	margin-left:5px;
 	margin-right:10px;
 	background-color:#b02435;
-	height:4px;
+	height:2px;
 	margin-top:2px;
 }
