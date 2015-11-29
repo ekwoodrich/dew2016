@@ -1,13 +1,52 @@
  @font-face {
      font-family: 'StateFaceRegular';
-     src: url('fonts/stateface-regular-webfont.eot');
-     src: url('fonts/stateface-regular-webfont.eot?#iefix') format('embedded-opentype'),
-          url('fonts/stateface-regular-webfont.woff') format('woff'),
-          url('fonts/stateface-regular-webfont.ttf') format('truetype'),
-          url('fonts/stateface-regular-webfont.svg#StateFaceRegular') format('svg');
+     src: url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/stateface-regular-webfont.eot');
+     src: url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/stateface-regular-webfont.eot?#iefix') format('embedded-opentype'),
+          url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/stateface-regular-webfont.woff') format('woff'),
+          url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/stateface-regular-webfont.ttf') format('truetype'),
+          url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/stateface-regular-webfont.svg#StateFaceRegular') format('svg');
      font-weight: normal;
      font-style: normal;
  }
+
+@font-face {
+	font-family: 'icomoon';
+	src:url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/icomoon.eot?alzze6');
+	src:url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/icomoon.eot?alzze6#iefix') format('embedded-opentype'),
+		url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/icomoon.ttf?alzze6') format('truetype'),
+		url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/icomoon.woff?alzze6') format('woff'),
+		url('https://s3.amazonaws.com/dewcaucus.com/cdn/fonts/icomoon.svg?alzze6#icomoon') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+	font-family: 'icomoon' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-dem:before {
+	content: "\e902";
+}
+.icon-gop:before {
+	content: "\e903";
+}
+.icon-us_capitol_dome:before {
+	content: "\e900";
+}
+.icon-white_house:before {
+	content: "\e901";
+}
 
 
 
@@ -17,7 +56,9 @@ a {
 a:hover {
 	color:#b02435;
 }
-
+body {
+	background-color:#efefef;
+}
 .navbar-brand-img {
 	
 	height:35px;
@@ -42,17 +83,26 @@ a:hover {
 	margin-left:auto;
 	margin-right:auto;
 	max-width:920px;
+	min-width:720px;
+	position:relative;
+	border:1px solid #aaa;
+	margin-bottom:20px;
 }
-.page-body {
+
+.page-container {
+	max-width:920px;
 	margin-left:auto;
 	margin-right:auto;
-	max-width:920px;
+	border:1px solid #aaa;
+	padding:10px;
+	background-color:#FBFBFB;
+}
+.page-body {
 	min-height:300px;
 }
 .page-heading {
 	margin-left:auto;
 	margin-right:auto;
-	max-width:1024px;
 	text-align:center;
 }
 .page-heading h3 {
@@ -82,12 +132,17 @@ a:hover {
 	height:24px;
 	margin:5px;
 }
+.breadcrumb {
+	margin:0px;
+}
 .breadcrumb-picker {
-	float:right;
+	position:absolute;
+	right:0px;
+	top:0px;
+	width:260px;
 }
 .breadcrumb-breadcrumb {
-	width:74%;
-	display:inline-block;
+	margin-right:280px;
 }
 .navbar-dew-line-a {
 	margin-left:10px;
