@@ -56,6 +56,15 @@ a {
 a:hover {
 	color:#b02435;
 }
+
+.dew-red {
+	color:#b02435;
+	
+}
+.dew-blue {
+	color:#3b4a6d;
+	
+}
 body {
 	background-color:#efefef;
 }
@@ -85,7 +94,6 @@ body {
 	max-width:920px;
 	min-width:720px;
 	position:relative;
-	border:1px solid #aaa;
 	margin-bottom:20px;
 }
 
@@ -103,13 +111,16 @@ body {
 .page-heading {
 	margin-left:auto;
 	margin-right:auto;
+	max-width:920px;
 	text-align:center;
+	position:relative;
 }
 .page-heading h3 {
 	margin-top:1px;
 	margin-bottom:30px;
 	font-weight:bold;
-	
+	font-family: 'Montserrat', sans-serif;
+	font-variant:small-caps;
 }
 .icon-gop {
 	position:relative;
