@@ -2,9 +2,14 @@ from flask import render_template, redirect, url_for
 
 from DewServer import app
 
+
+def generate_breadcrumbs():
+       return []
+        
+
 @app.route('/')
 def index():    
-    return render_template('election_summary.html')
+    return render_template('index.html')
 
 
 @app.route('/elections/presidential/')

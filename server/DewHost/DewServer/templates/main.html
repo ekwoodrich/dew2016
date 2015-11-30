@@ -39,29 +39,29 @@
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="icon-white_house"></span> Presidential Election<span class="caret"></span></a>
+              <a href="/elections/presidential/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="icon-white_house"></span> Presidential Election<span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="#"><span class="icon-gop"></span> Republican Primary</a></li>
-                <li><a href="#"><span class="icon-dem"></span> Democratic Primary</a></li>
+                <li><a href="/elections/presidential/republican/"><span class="icon-gop"></span> Republican Primary</a></li>
+                <li><a href="/elections/presidential/democratic/#"><span class="icon-dem"></span> Democratic Primary</a></li>
                 <li role="separator" class="divider"></li>
-                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="#">General Election</a></li>
+                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="/elections/presidential/general/">General Election</a></li>
               </ul>
             </li> <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="icon-us_capitol_dome"></span> U.S. Senate<span class="caret"></span></a>
+              <a href="/elections/us_senate/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="icon-us_capitol_dome"></span> U.S. Senate<span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="#"><span class="icon-gop"></span> Republican Primary</a></li>
-                <li><a href="#"><span class="icon-dem"></span> Democratic Primary</a></li>
+                <li><a href="/elections/us_senate/republican/"><span class="icon-gop"></span> Republican Primary</a></li>
+                <li><a href="/elections/us_senate/democratic/"><span class="icon-dem"></span> Democratic Primary</a></li>
                 <li role="separator" class="divider"></li>
-                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="#">General Election</a></li>
+                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="/elections/us_senate/general/">General Election</a></li>
               </ul>
             </li>
             </li> <li class="dropdown">
-              <a href="#" class="stateface stateface-oh dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Governor<span class="caret"></span></a>
+              <a href="/elections/governor/" class="stateface stateface-oh dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Governor<span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="#"><span class="icon-gop"></span> Republican Primary</a></li>
-                <li><a href="#"><span class="icon-dem"></span> Democratic Primary</a></li>
+                <li><a href="/elections/governor/democratic/"><span class="icon-gop"></span> Republican Primary</a></li>
+                <li><a href="/elections/governor/republican/"><span class="icon-dem"></span> Democratic Primary</a></li>
                 <li role="separator" class="divider"></li>
-                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="#">General Election</a></li>
+                <li><a class = "dropdown-menu-bottom stateface stateface-us" href="/elections/governor/general/">General Election</a></li>
               </ul>
             </li>
           </ul>
@@ -70,8 +70,6 @@
                 <input type="search" class="form-control navbar-search" placeholder="Search">
 
               </div>
-
-
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -94,10 +92,11 @@
           </div>
           {% endblock %}
           
+          {% block page_heading %}
           <div class="page-heading">
-          
             <h3>{% if page_icon %}<span style="left:0px; font-size:30pt; top:7px;" class="dew-red {{ page_icon }}"></span> {% endif %} {{ page_title }}</h3>
           </div>
+          {% endblock %}
           
           <div class="page-container">
          {% block body %}
