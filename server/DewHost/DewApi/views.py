@@ -10,7 +10,7 @@ from sqlalchemy import desc
 def hello():
     return "Dewcaucus API"
 
-@app.route("/api/snapshot/us/gop.html")
+@app.route("/snapshot/us/gop.html")
 def gop_snapshot():
     summary_region = Region.query.filter_by(abv='US').first()
     gop_new_summary = ElectionSummary.query.filter_by(party='gop').order_by(desc(ElectionSummary.snapshot_date)).limit(3).first()
@@ -30,7 +30,7 @@ def gop_snapshot():
         return output_html
     else:
         "No snapshots found."
-@app.route("/api/snapshot/us/dem.html")
+@app.route("/snapshot/us/dem.html")
 def dem_snapshot():
     summary_region = Region.query.filter_by(abv='US').first()
     dem_new_summary = ElectionSummary.query.filter_by(party='dem').order_by(desc(ElectionSummary.snapshot_date)).limit(3).first()

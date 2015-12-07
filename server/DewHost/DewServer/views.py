@@ -47,6 +47,3 @@ def not_found():
     return render_template('404.html'), 201
     
     
-@app.route('/api/')
-def api():
-    return DewApi(request).generate_response(json=True);
