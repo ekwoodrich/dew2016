@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
 
 from DewServer import app
 
@@ -9,8 +9,7 @@ def generate_breadcrumbs():
 
 @app.route('/')
 def index():    
-    return render_template('index.html')
-
+    return render_template('index.html')    
 
 @app.route('/elections/presidential/')
 def us_presidential():
@@ -46,3 +45,8 @@ def us_governor():
 @app.errorhandler(404)
 def not_found():
     return render_template('404.html'), 201
+    
+    
+@app.route('/api/')
+def api():
+    return DewApi(request).generate_response(json=True);

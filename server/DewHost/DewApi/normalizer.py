@@ -6,6 +6,7 @@ import datetime
 from datetime import timedelta
 import pprint
 import copy
+from politics import states
 
 head_to_head_huffpo_uri = 'http://elections.huffingtonpost.com/pollster/api/polls?topic=2016-president'
 horserace_huffpo_uri_gop = 'http://elections.huffingtonpost.com/pollster/api/polls?topic=2016-president-gop-primary'
@@ -149,21 +150,17 @@ def normalize_huffpo_poll_list(poll_list, poll_type):
 
 			#copy pollster info
 			if poll['pollster']:	
-				normal_poll['pollster_info'] = {'sponsor_name' : poll['pollster'], 'pollster_partisan' : poll['partisan'].lower()}
+				normal_poll['pollster_info'] = {'pollster_str' : poll['pollster'], 'pollster_partisan' : poll['partisan'].lower(), 'group_type' : 'pollster'}
+				
 			#remove party from naming
-			normal_poll['pollster_info']['sponsor_name'] = normal_poll['pollster_info']['sponsor_name'].replace('(D)', '')
-			normal_poll['pollster_info']['sponsor_name'] = normal_poll['pollster_info']['sponsor_name'].replace('(R)', '')
+			normal_poll['pollster_info']['pollster_str'] = normal_poll['pollster_info']['pollster_str'].replace('(D)', '')
+			normal_poll['pollster_info']['pollster_str'] = normal_poll['pollster_info']['pollster_str'].replace('(R)', '')
 			
-			#normalize naming, deprecated
-			if "PPP" in normal_poll['pollster_info']['sponsor_name']:
-				normal_poll['pollster_info']['sponsor_name'] = "Public Policy Polling"
 	
-			#deprecated
 			normal_poll['pollster_info']['pollster_list'] = []
 			normal_poll['pollster_info']['pollster_list_json'] = ''
-			normal_poll['pollster_info']['pollster_name'] = str(poll['survey_houses'])
-
-			#iterate through "survey houses" and assign as pollsters
+			
+			#iterate through "survey houses" and assign as pollster sponsors
 			for house in poll['survey_houses']:
 				house['party'] = house['party'].lower()
 				house['party'] = house['party'].replace('n/a', 'nonpartisan')
@@ -173,7 +170,30 @@ def normalize_huffpo_poll_list(poll_list, poll_type):
 				house['name'] = house['name'].replace('(D)', '')
 				house['name'] = house['name'].replace('(R)', '')
 				
+				#normalize naming, deprecated
+				if "PPP" in normal_poll['pollster_info']['pollster_str']:
+					normal_poll['pollster_info']['pollster_str'] = "Public Policy Polling"
+					
+				house['group_type'] = 'pollster'
+				
 				normal_poll['pollster_info']['pollster_list'].append(house)
+				
+			for sponsor in poll['sponsors']:
+				sponsor['party'] = sponsor['party'].lower()
+				sponsor['party'] = sponsor['party'].replace('n/a', 'nonpartisan')
+				sponsor['party'] = sponsor['party'].replace('rep', 'gop')
+				
+	
+				sponsor['name'] = sponsor['name'].replace('(D)', '')
+				sponsor['name'] = sponsor['name'].replace('(R)', '')
+				
+				#normalize naming, deprecated
+				if "PPP" in normal_poll['pollster_info']['pollster_str']:
+					normal_poll['pollster_info']['pollster_str'] = "Public Policy Polling"
+					
+				sponsor['group_type'] = 'sponsor'
+				
+				normal_poll['pollster_info']['pollster_list'].append(sponsor)
 			
 			normal_poll['pollster_info']['pollster_list_json'] = json.dumps(normal_poll['pollster_info']['pollster_list'])
 	
@@ -209,6 +229,12 @@ def normalize_huffpo_poll_list(poll_list, poll_type):
 
 					normal_poll_question['poll_info']['poll_name'] = question['name']
 
+					if not normal_poll_question['poll_info']['poll_region']:
+						for abv, name in states.iteritems():
+							if name in normal_poll_question['poll_info']['poll_name']:
+								normal_poll_question['poll_info']['poll_region'] = abv
+								break
+								
 					#copy poll stats to question object	
 					normal_poll_question['poll_stats']['poll_sample'] = question['subpopulations'][subpop]['observations']	
 					normal_poll_question['poll_stats']['poll_margin_of_error'] = question['subpopulations'][subpop]['margin_of_error']
@@ -258,9 +284,9 @@ def normalize_huffpo_poll_list(poll_list, poll_type):
 					if 'Presidential' in question['name'] or 'President' in question['name']:
 						normal_poll_question['poll_info']['poll_office'] = 'president'
 					elif 'Senate' in question['name']:
-						normal_poll_question['poll_info']['poll_office'] = 'president'
-					elif 'President' in question['name']:
 						normal_poll_question['poll_info']['poll_office'] = 'senate'
+					elif 'President' in question['name']:
+						normal_poll_question['poll_info']['poll_office'] = 'president'
 					else:	
 						normal_poll_question['poll_info']['poll_office'] = None
 					if poll_topic:

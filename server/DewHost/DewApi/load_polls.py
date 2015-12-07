@@ -1,4 +1,4 @@
-from models import db, Region, PoliticalPoll, Pollster, PollItem, Politician, ElectionSummary, PoliticalSurvey
+from models import db, Region, PoliticalPollQuestion, Pollster, PollItem, Politician, ElectionSummary, PoliticalPoll
 from models import  get_or_create
 from normalizer import get_polls
 from sqlalchemy.exc import IntegrityError
@@ -12,17 +12,25 @@ from operator import itemgetter
 from subprocess import call
 
 for abv, name in states.iteritems():
-	reg = Region(national = False, name = name, abv = abv)
+	try:
+		reg = Region(national = False, name = name, abv = abv)
+		db.session.add(reg)
+		db.session.commit()
+		#print reg
+	except IntegrityError:
+		db.session.rollback()
+		
+try:	
+	reg = Region(national = True, name = "United States", abv = "US")
 	db.session.add(reg)
-	#print reg
+	db.session.commit()
+except IntegrityError:
+		db.session.rollback()
+	
+#app.debug = False
 
-app.debug = False
 
 
-reg = Region(national = True, name = "United States", abv = "US")
-db.session.add(reg)
-
-db.session.commit()
 db.session.autoflush = False
 
 poll_failure_count = 0
@@ -56,7 +64,7 @@ for poll in poll_list:
 	poll_iteration += 1
 
 	try:			
-		new_poll = PoliticalPoll()
+		new_poll = PoliticalPollQuestion()
 		
 		for estimate in poll['estimates']:
 			xstr = lambda s: s or ""
@@ -79,6 +87,9 @@ for poll in poll_list:
 		
 					new_politician.update()
 	
+					if poll['poll_info']['poll_office']:
+						new_politician.seeking_office = poll['poll_info']['poll_office']
+					
 					if poll['poll_info']['poll_office']:
 						new_politician.seeking_office = poll['poll_info']['poll_office']
 					
@@ -122,43 +133,38 @@ for poll in poll_list:
 
 		
 		for pollster in poll['pollster_info']['pollster_list']:
-			new_pollster = get_or_create(db.session, Pollster, name = pollster['name'], party = pollster['party'])[0]	
+			new_pollster = get_or_create(db.session, Pollster, name = pollster['name'], party = pollster['party'], group_type = pollster['group_type'])[0]	
 			new_poll.pollster_list.append(new_pollster)
 		
 		
 		
-		new_poll.poll_sponsor = get_or_create(db.session, Pollster, name= poll['pollster_info']['sponsor_name'])[0]
-		
 
-		new_poll.sponsor_name = poll['pollster_info']['sponsor_name']
+		new_poll.pollster_str = poll['pollster_info']['pollster_str']
 		
 		new_poll.set_dewid()
 		
-		new_survey_query = get_or_create(db.session, PoliticalSurvey,source_id = poll['poll_info']['poll_source_id'])
+		new_survey_query = get_or_create(db.session, PoliticalPoll,source_id = poll['poll_info']['poll_source_id'])
 		
 		if new_survey_query[1]:
 			new_survey_source_id  = new_survey_query[0].id
 			new_survey_item = new_survey_query[0]
-			new_survey_item.region = Region.query.filter_by(abv=poll['poll_info']['poll_region']).first()	
 			new_survey_item.poll_date = poll['poll_info']['poll_date']['poll_end_date']
 			new_survey_item.uuid = str(poll['poll_info']['survey_uuid'])
 			new_survey_item.start_date = poll['poll_info']['poll_date']['poll_start_date']
 			new_survey_item.end_date = poll['poll_info']['poll_date']['poll_end_date']
 			new_survey_item.added_date = datetime.now()
 			new_survey_item.pollster_list = new_poll.pollster_list
-			new_survey_item.poll_sponsor = new_poll.poll_sponsor
-			new_survey_item.sponsor_name = poll['pollster_info']['sponsor_name']
+			new_survey_item.pollster_str = poll['pollster_info']['pollster_str']
 
 			new_survey_item.source = poll['poll_info']['poll_source']
 			new_survey_item.source_id = poll['poll_info']['poll_source_id']	
 			new_survey_item.source_uri = poll['poll_info']['poll_source_uri']
 			new_survey_item.set_dewid()
 			
-			db.session.add(new_survey_item)
 			db.session.commit()
 
 			print 'New Survey Added'
-			print new_survey_item.poll_sponsor
+			print new_survey_item.pollster_str
 
 		db.session.add(new_poll)
 		db.session.commit()
@@ -177,13 +183,15 @@ for poll in poll_list:
 		
 		poll_failure_count += 1
 		print "----excluded duplicate-----\n"
+		print str(new_poll)
+		print str(new_poll.start_date) + " - " + str(new_poll.end_date)
 		db.session.rollback()
 
 		
 
 		
 	if app.debug:
-		if poll_iteration > 80:
+		if poll_iteration > 400:
 			print 'Debug Run Complete'
 			break	
 		
@@ -198,18 +206,7 @@ print poll_failure_count
 
 print ""
 
-total_poll_count = PoliticalPoll.query.count()
-
-new_snapshot = generate_presidential_snapshot(db.session, reg)
-
-
-print "============GOP Presidential Snapshot========="
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(new_snapshot['average_gop_list'])
-print ""
-print "============DEM Presidential Snapshot========="
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(new_snapshot['average_dem_list'])
+total_poll_count = PoliticalPollQuestion.query.count()
 
 
 

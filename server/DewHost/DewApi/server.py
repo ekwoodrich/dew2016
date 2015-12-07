@@ -2,7 +2,7 @@
 from flask import Flask
 from models import db, PoliticalPoll
 from flask.ext.superadmin import Admin, model
-from DewApi2016 import app
+from DewHost import app
 
 @app.route("/")
 def hello():

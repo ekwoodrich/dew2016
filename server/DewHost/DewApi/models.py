@@ -22,7 +22,7 @@ db = SQLAlchemy(app)
 
 
 politician_polls = db.Table('politician_polls', 
-    	db.Column('political_poll_id', db.Integer, db.ForeignKey('political_poll.id')),
+    	db.Column('political_poll_question_id', db.Integer, db.ForeignKey('political_poll_question.id')),
 	db.Column('politician_id', db.Integer, db.ForeignKey('politician.id'))
 )
 
@@ -38,12 +38,14 @@ class Politician(db.Model):
 	slug_human = db.Column(db.String(120))
 	party = db.Column(db.String(20))
 	
+	region_id = db.Column(db.Integer, db.ForeignKey('region.id'))	
+	
 	seeking_office = db.Column(db.String(120))	
 	
 	summary_items = db.relationship('CandidateSummary', backref = 'politician')
 	
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
-	polls = db.relationship('PoliticalPoll', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
+	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
 	def update(self):
 		self.slug = str(self.first_name).lower() + "_" + str(self.last_name).lower()
@@ -212,31 +214,31 @@ class ElectionSummary(db.Model):
 		return self.party + " - " + str(self.created_datetime)
 
 poll_pollsters = db.Table('poll_pollsters', 
-	db.Column('political_poll_id', db.Integer, db.ForeignKey('political_poll.id')),
+	db.Column('political_poll_id', db.Integer, db.ForeignKey('political_poll_question.id')),
 	db.Column('pollster_id', db.Integer, db.ForeignKey('political_pollster.id'))
 )	
 
 survey_pollsters = db.Table('survey_pollsters', 
-	db.Column('political_survey_id', db.Integer, db.ForeignKey('political_survey.id')),
+	db.Column('political_poll_id', db.Integer, db.ForeignKey('political_poll.id')),
 	db.Column('pollster_id', db.Integer, db.ForeignKey('political_pollster.id'))
 )
-class PoliticalSurvey(db.Model):
-	__tablename__ = 'political_survey'
+class PoliticalPoll(db.Model):
+	__tablename__ = 'political_poll'
 	
 	id = db.Column(db.Integer, primary_key=True)
 	dewid = db.Column(db.String(255), unique = True)
 	
 	election_year = db.Column(db.Integer, default = 2016)
 	
-	region_id = db.Column(db.Integer, db.ForeignKey('region.id'))
+
 	uuid = db.Column(db.String(255))
 	
-	pollster_list = db.relationship('Pollster', secondary = survey_pollsters, backref = db.backref('political_survey', lazy = 'dynamic'))
+	pollster_list = db.relationship('Pollster', secondary = survey_pollsters, backref = db.backref('political_poll', lazy = 'dynamic'))
 
-	sponsor_id = db.Column(db.Integer, db.ForeignKey('political_pollster.id'))
-	sponsor_name = db.Column(db.String(255))
+
+	pollster_str = db.Column(db.String(255))
 	
-	polls = db.relationship('PoliticalPoll', backref='political_survey', lazy = 'dynamic')	
+	polls = db.relationship('PoliticalPollQuestion', backref='political_poll', lazy = 'dynamic')	
 
 	
 	partisan = db.Column(db.Boolean)
@@ -252,18 +254,17 @@ class PoliticalSurvey(db.Model):
 		dewid = hashlib.md5()
 		
 		dewid.update(str(self.source_id))
-		
-		if not dewid.hexdigest()[0:6]:
+		if not dewid.hexdigest():
 			self.set_dewid()
 
 		self.dewid = 'dewid-' + dewid.hexdigest()[0:6]
 		
 	def __str__(self):
-		return (str(self.election_year) + " " + str(self.sponsor_name) + " " + str(self.region) + " " + "\n") 
+		return (str(self.election_year) + " " + str(self.pollster_str) + " " + str(self.region) + " " + "\n") 
 		
-class PoliticalPoll(db.Model):
+class PoliticalPollQuestion(db.Model):
 	
-	__tablename__ = 'political_poll'
+	__tablename__ = 'political_poll_question'
 	
 	
 	id = db.Column(db.Integer, primary_key=True)
@@ -274,11 +275,10 @@ class PoliticalPoll(db.Model):
 	title = db.Column(db.String(255))
 	
 	election_year = db.Column(db.Integer, default = 2016)
-	pollster_list = db.relationship('Pollster', secondary = poll_pollsters, backref = db.backref('political_poll', lazy = 'dynamic'))
+	pollster_list = db.relationship('Pollster', secondary = poll_pollsters, backref = db.backref('political_poll_question', lazy = 'dynamic'))
 	#pollster_list_json = db.Column(db.String(200))	
-	sponsor_name = db.Column(db.String(80))
-	sponsor_id = db.Column(db.Integer, db.ForeignKey('political_pollster.id'))
-	survey_id = db.Column(db.Integer, db.ForeignKey('political_survey.id'))
+	pollster_str = db.Column(db.String(80))
+	survey_id = db.Column(db.Integer, db.ForeignKey('political_poll.id'))
 	
 	partisan = db.Column(db.Boolean)
 	party = db.String(10)
@@ -298,7 +298,7 @@ class PoliticalPoll(db.Model):
 
 	office = db.Column(db.String(32))
 
-	poll_items = db.relationship('PollItem', backref='political_poll', lazy = 'dynamic')	
+	poll_items = db.relationship('PollItem', backref='political_poll_question', lazy = 'dynamic')	
 		
 	
 	def set_dewid(self):
@@ -307,10 +307,11 @@ class PoliticalPoll(db.Model):
 		poll_item_hash = ''
 	
 		for poll in self.poll_items:
-			poll_item_hash += poll.choice
+			poll_item_hash += str(poll.choice)
+			poll_item_hash += str(poll.value)
 		dewid.update(poll_item_hash)
 		dewid.update(self.title)
-		dewid.update(str(self.sponsor_name))
+		dewid.update(str(self.pollster_str))
 		dewid.update(self.start_date.ctime())
 		dewid.update(self.end_date.ctime())
 		dewid.update(str(self.office))
@@ -322,13 +323,13 @@ class PoliticalPoll(db.Model):
 		dewid.update(str(self.method))
 		dewid.update(str(self.margin_of_error))
 		
-		if not dewid.hexdigest()[0:6]:
+		if not dewid.hexdigest():
 			self.set_dewid()
 
-		self.dewid = 'dewid-' + dewid.hexdigest()[0:6]
+		self.dewid = 'dewid-' + dewid.hexdigest()
 	
 	def __str__(self):
-		return (str(self.sponsor_name) + " " + self.title + " " + "\n" + self.dewid + "\n" + "[" + str(self.poll_class) + "]" + "\n") 
+		return (str(self.pollster_str) + " " + self.title + " " + "\n" + self.dewid + "\n" + "[" + str(self.poll_class) + "]" + "\n") 
 		
 
 class PollItem(db.Model):
@@ -338,7 +339,7 @@ class PollItem(db.Model):
 	id = db.Column(db.Integer, primary_key = True)
 
 	politician_id = db.Column(db.Integer, db.ForeignKey('politician.id'))
-	political_poll_id = db.Column(db.Integer, db.ForeignKey('political_poll.id'))
+	political_poll_question_id = db.Column(db.Integer, db.ForeignKey('political_poll_question.id'))
 	
 	party = db.Column(db.String(20))
 	value = db.Column(db.Float)
@@ -361,8 +362,7 @@ class Pollster(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(120))
 	party = db.Column(db.String(20))
-	
-	sponsor = db.relationship('PoliticalPoll', backref='poll_sponsor')	
+	group_type = db.Column(db.String(60))
 	
 	def __str__(self):
 		return self.name	
@@ -373,12 +373,13 @@ class Region(db.Model):
 
 	id = db.Column(db.Integer, primary_key=True)
 	national = db.Column(db.Boolean, default = False)
-	name = db.Column(db.String(48))
-	abv = db.Column(db.String(3))
+	name = db.Column(db.String(48), unique=True)
+	abv = db.Column(db.String(3), unique=True)
 		
 	poll_items = db.relationship('PollItem', backref = 'region')
-	polls = db.relationship('PoliticalPoll', backref = 'region')
-	poll_survey_list = db.relationship('PoliticalSurvey', backref = 'region')
+	polls = db.relationship('PoliticalPollQuestion', backref = 'region')
+	politicians = db.relationship('Politician', backref = 'region')
+
 	election_summaries = db.relationship('ElectionSummary', backref = 'region')
 	candidate_summaries = db.relationship('CandidateSummary', backref = 'region')
 
@@ -467,9 +468,9 @@ admin = Admin(app, 'Simple Models')
 
 # Add views
 admin.register(CandidateSummary, session=db.session)
-admin.register(PoliticalSurvey, session=db.session)
-admin.register(ElectionSummary, session=db.session)
 admin.register(PoliticalPoll, session=db.session)
+admin.register(ElectionSummary, session=db.session)
+admin.register(PoliticalPollQuestion, session=db.session)
 admin.register(PollItem, session=db.session)
 admin.register(Politician, session=db.session)
 admin.register(Pollster, session=db.session)

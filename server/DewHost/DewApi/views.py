@@ -1,4 +1,4 @@
-from DewApi2016 import app
+from DewApi import app
 from models import PoliticalPoll, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
 import flask.ext.restless
 from json2html import *
