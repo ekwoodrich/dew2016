@@ -6,7 +6,7 @@ from sqlalchemy.sql.expression import ClauseElement
 import pickle
 from sqlalchemy.exc import IntegrityError
 import pprint
-from politics import presidential_candidates_dem
+from politics import presidential_candidates_dem, presidential_candidates_gop
 from datetime import datetime, date
 import json
 from flask.ext.superadmin import Admin, model
@@ -528,27 +528,28 @@ def generate_snapshot(party = None):
 	region = Region.query.filter_by(iso = "US").first()
 	
 	for party in ['dem', 'gop']:
-		print party
 		politician_list = Politician.query.filter_by(seeking_office = "president", party = party)
 		for politician in politician_list:
 			if party == 'dem':
 				if not politician.last_name in presidential_candidates_dem:
-					break
-			print politician.slug_human
-			race_poll_item_list = politician.poll_items.filter_by(office = "president", region = region).order_by(PollItem.poll_date.asc())
+					continue
+			elif party == 'gop':
+				if not politician.last_name in presidential_candidates_gop:
+					continue
+			race_poll_item_list = politician.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
 			values = []
 			final_value = None
 			final_item = 0
 			for poll_item in race_poll_item_list[-3:]: 
 				values.append(poll_item.value)
-				if final_item == 0:
+				if final_item == 2:
 					final_value = poll_item.value
-					final_item = 1
+				final_item += 1
 			
 			if party == 'dem':
 				politician_snapshot_list_dem.append({
 					"office" : politician.seeking_office,
-					"value" : sum(values)/3,
+					"value" : float(sum(values))/float(3),
 					"region" : region.abv,
 					"slug" : politician.slug,
 					"name" : politician.slug_human,
@@ -557,11 +558,12 @@ def generate_snapshot(party = None):
 			elif party == 'gop':
 				politician_snapshot_list_gop.append({
 					"office" : politician.seeking_office,
-					"value" : sum(values)/3,
+					"value" : float(sum(values))/float(3),
 					"region" : region.abv,
 					"slug" : politician.slug,
 					"name" : politician.slug_human,
-					"uuid" : politician.uuid }) 
+					"uuid" : politician.uuid,
+					"final_value" : final_value }) 
 	return [{"party" : "dem", 
 			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
 				"date" : date.today().strftime("%m-%d-%y"),

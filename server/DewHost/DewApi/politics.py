@@ -104,3 +104,16 @@ presidential_candidates_dem = [
         "Sanders"
         
 ]
+presidential_candidates_gop = [
+        "Trump",
+        "Bush",
+        "Cruz", 
+        "Rubio",
+        "Kasich",
+        "Gilmore",
+        "Huckabee",
+        "Santorum",
+        "Fiorina",
+        "Carson",
+        "Graham"
+]
