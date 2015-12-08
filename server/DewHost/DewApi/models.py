@@ -10,7 +10,7 @@ import pprint
 from politics import presidential_candidates_dem, presidential_candidates_gop
 from datetime import datetime, date
 import json
-
+from slugify import slugify
 
 app = Flask(__name__)
 
@@ -25,6 +25,31 @@ politician_polls = db.Table('politician_polls',
     db.Column('political_poll_question_id', db.Integer, db.ForeignKey('political_poll_question.id')),
 	db.Column('politician_id', db.Integer, db.ForeignKey('politician.id'))
 )
+
+
+def get_or_create(session, model, defaults={}, **kwargs):
+        query = session.query(model).filter_by(**kwargs)
+
+        instance = query.first()
+
+        if instance:
+            return instance, False
+        else:
+            #session.begin(nested=True)
+            try:
+                params = dict((k, v) for k, v in kwargs.iteritems() if not isinstance(v, ClauseElement))
+                params.update(defaults)
+                instance = model(**params)
+
+                session.add(instance)
+                #session.commit()
+
+                return instance, True
+            except IntegrityError as e:
+                #session.rollback()
+                instance = query.one()
+
+                return instance, False
 
 class Politician(db.Model):
 	
@@ -49,7 +74,20 @@ class Politician(db.Model):
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
-	def get_recent_values(self, region, pollster = None, num_values = 5, election_year = 2016, office = None):
+	
+	def encapsulate_payload(self, payload):
+				return {
+					'slug_human' : self.slug_human, 
+					'slug' : self.slug, 
+					'first_name' : self.first_name, 
+					'last_name' : self.last_name,
+					'seeking_office' : self.seeking_office,
+					'uuid' : self.uuid, 
+					'party' : self.party, 
+					'payload': payload,
+					'url' : self.url()}
+	
+	def recent_values(self, region, pollster = None, num_values = 5, election_year = 2016, office = None):
 		if not office:
 			office = self.seeking_office
 		race_poll_item_list = self.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
@@ -64,15 +102,16 @@ class Politician(db.Model):
 				'value' : poll_item.value, 
 				'end_date' : poll_item.poll_date.strftime("%m-%d-%y"), 
 				'pollster' : poll_item.political_poll_question.pollster_str,
+				'url' : poll_item.political_poll_question.url(),
 				'uuid' : poll_item.political_poll_question.uuid}])
 			if final_item == 4:
 				final_value = poll_item.value
 			final_item += 1
 		current_value = sum(values) / num_values
-		return {'slug_human' : self.slug_human, 'slug' : self.slug, 'uuid' : self.uuid, 'party' : self.party, 'current_value' : current_value, 'recent_values' : recent_value_list}
+		return self.encapsulate_payload({'current_value' : current_value, 'recent_values' : recent_value_list})
 	
 	def url(self):
-		return "/us/politician/" + self.slug
+		return "/politician/us/" + self.slug + "/"
 	
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
@@ -290,6 +329,11 @@ class PoliticalPoll(db.Model):
 	source_uri = db.Column(db.String(256))
 
 	
+	def slug(self):
+		return slugify(self.pollster_str + "_" + self.uuid[0:6])
+		
+	def url(self):
+		return "/pollsters/polls/" + self.slug() + "/"
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
 		
@@ -342,7 +386,15 @@ class PoliticalPollQuestion(db.Model):
 
 	poll_items = db.relationship('PollItem', backref='political_poll_question', lazy = 'dynamic')	
 		
-	
+	def slug(self):
+		return slugify(self.title)
+		
+	def url(self):
+		if self.political_poll:
+		#political_poll = PoliticalPoll.query.filter_by(id = self.survey_id).first()
+			return self.political_poll.url() + self.slug() + "/" 
+		else: 
+			return "/" + self.slug() + "/" 
 	def set_dewhash(self):
 		"""Generates and saves the dewhash for deduping."""
 		self.uuid = str(uuid.uuid1())
@@ -425,9 +477,13 @@ class Pollster(db.Model):
 	name = db.Column(db.String(120))
 	party = db.Column(db.String(20))
 	group_type = db.Column(db.String(60))
+	slug = db.Column(db.String(100))
 	
 	uuid = db.Column(db.String(255))
 	dewhash = db.Column(db.String(255), unique = True)
+	
+	def url(self):
+		return '/pollsters/' + self.slug + '/'
 	
 	def set_dewhash(self):
 		"""Generates and saves the dewhash for deduping."""
@@ -462,35 +518,15 @@ class Region(db.Model):
 
 	election_summaries = db.relationship('ElectionSummary', backref = 'region')
 	candidate_summaries = db.relationship('CandidateSummary', backref = 'region')
-
+	
+	def url(self):
+		return '/elections/' + self.iso
+		
 	def __str__(self):
 		if self.national:
 			return "National"
 		else:
 			return self.name
-def get_or_create(session, model, defaults={}, **kwargs):
-        query = session.query(model).filter_by(**kwargs)
-
-        instance = query.first()
-
-        if instance:
-            return instance, False
-        else:
-            #session.begin(nested=True)
-            try:
-                params = dict((k, v) for k, v in kwargs.iteritems() if not isinstance(v, ClauseElement))
-                params.update(defaults)
-                instance = model(**params)
-
-                session.add(instance)
-                #session.commit()
-
-                return instance, True
-            except IntegrityError as e:
-                #session.rollback()
-                instance = query.one()
-
-                return instance, False
 def generate_presidential_snapshot(session, region, force_new = False):
 	if not region:
 		summary_region = Region.query.filter_by(abv='US').first()
@@ -572,21 +608,21 @@ def generate_snapshot(party = None):
 					
 			
 			if party == 'dem':
-				politician_snapshot_list_dem.append(politician.get_recent_values(region))
+				politician_snapshot_list_dem.append(politician.recent_values(region))
 					 
 			elif party == 'gop':
-				politician_snapshot_list_gop.append(politician.get_recent_values(region))
+				politician_snapshot_list_gop.append(politician.recent_values(region))
 					 
 	return [{"party" : "dem", 
 			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
 				"date" : date.today().strftime("%m-%d-%y"),
 				"list" : sorted(politician_snapshot_list_dem, 
-					key = lambda snapshot : snapshot['current_value'], 
+					key = lambda snapshot : snapshot['payload']['current_value'], 
 					reverse = True)}},
 			{"party" : "gop", 
 			"snapshot" : {"title"  : "GOP - US Presidential Race Snapshot",
 				"date" : date.today().strftime("%m-%d-%y"),
 				"list" : sorted(politician_snapshot_list_gop, 
-					key = lambda snapshot : snapshot['current_value'], 
+					key = lambda snapshot : snapshot['payload']['current_value'], 
 					reverse = True)}}]
 					
