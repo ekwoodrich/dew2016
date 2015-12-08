@@ -1,5 +1,5 @@
 from DewApi import app
-from models import PoliticalPoll, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
+from models import generate_snapshot, PoliticalPoll, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
 import flask.ext.restless
 from flask.ext.restless import url_for, APIManager
 from json2html import *
@@ -15,18 +15,30 @@ def hello():
 
 @app.route("/politicians/")
 def politician_all():
-    politician_list = Politician.query.limit(10).all()
+    politician_list = Politician.query.all()
     
     response_list = []
     
     for politician in politician_list:
-        response_list.append({'name' : politician.slug_human, 'slug': politician.slug, "uuid" : politician.uuid})
+        response_list.append({
+            'name' : politician.slug_human, 
+            'first_name' : politician.first_name, 
+            'last_name' : politician.last_name, 
+            'slug': politician.slug, 'uuid' : politician.uuid, 
+            'seeking_office' : politician.seeking_office, 
+            'party' : politician.party, 
+            'url' : politician.url()})
         
     return Response(json.dumps(response_list), mimetype = "text/json")
     
 @app.route("/politicians/<dew_id>")
 def politician_select(dew_id):
     return "politicians"
+    
+@app.route("/elections/us/presidential/snapshot")
+def us_pres_snapshot():
+    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
+    
 @app.route("/snapshot/us/gop.html")
 def gop_snapshot():
     summary_region = Region.query.filter_by(abv='US').first()

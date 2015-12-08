@@ -6,7 +6,8 @@ from sqlalchemy.sql.expression import ClauseElement
 import pickle
 from sqlalchemy.exc import IntegrityError
 import pprint
-from datetime import datetime
+from politics import presidential_candidates_dem
+from datetime import datetime, date
 import json
 from flask.ext.superadmin import Admin, model
 
@@ -48,6 +49,8 @@ class Politician(db.Model):
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
+	def url(self):
+		return "/us/politician/" + self.slug
 	
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
@@ -515,16 +518,59 @@ class PollUpdateReport(db.Model):
 	def summary_complete(self):
 		self.poll_summary_success = True
 		
+
+
+def generate_snapshot(party = None):
 	
-admin = Admin(app, 'Simple Models')
-
-# Add views
-admin.register(CandidateSummary, session=db.session)
-admin.register(PoliticalPoll, session=db.session)
-admin.register(ElectionSummary, session=db.session)
-admin.register(PoliticalPollQuestion, session=db.session)
-admin.register(PollItem, session=db.session)
-admin.register(Politician, session=db.session)
-admin.register(Pollster, session=db.session)
-
-db.create_all()
+	
+	politician_snapshot_list_dem = []
+	politician_snapshot_list_gop = []
+	region = Region.query.filter_by(iso = "US").first()
+	
+	for party in ['dem', 'gop']:
+		print party
+		politician_list = Politician.query.filter_by(seeking_office = "president", party = party)
+		for politician in politician_list:
+			if party == 'dem':
+				if not politician.last_name in presidential_candidates_dem:
+					break
+			print politician.slug_human
+			race_poll_item_list = politician.poll_items.filter_by(office = "president", region = region).order_by(PollItem.poll_date.asc())
+			values = []
+			final_value = None
+			final_item = 0
+			for poll_item in race_poll_item_list[-3:]: 
+				values.append(poll_item.value)
+				if final_item == 0:
+					final_value = poll_item.value
+					final_item = 1
+			
+			if party == 'dem':
+				politician_snapshot_list_dem.append({
+					"office" : politician.seeking_office,
+					"value" : sum(values)/3,
+					"region" : region.abv,
+					"slug" : politician.slug,
+					"name" : politician.slug_human,
+					"uuid" : politician.uuid,
+					"final_value" : final_value }),
+			elif party == 'gop':
+				politician_snapshot_list_gop.append({
+					"office" : politician.seeking_office,
+					"value" : sum(values)/3,
+					"region" : region.abv,
+					"slug" : politician.slug,
+					"name" : politician.slug_human,
+					"uuid" : politician.uuid }) 
+	return [{"party" : "dem", 
+			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
+				"date" : date.today().strftime("%m-%d-%y"),
+				"list" : sorted(politician_snapshot_list_dem, 
+					key = lambda snapshot : snapshot['value'], 
+					reverse = True)}},
+			{"party" : "gop", 
+			"snapshot" : {"title"  : "GOP - US Presidential Race Snapshot",
+				"date" : date.today().strftime("%m-%d-%y"),
+				"list" : sorted(politician_snapshot_list_gop, 
+					key = lambda snapshot : snapshot['value'], 
+					reverse = True)}}]

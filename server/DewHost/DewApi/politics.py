@@ -97,3 +97,10 @@ senate_class_3_states = {
         'WA': 'Washington',
         'WI': 'Wisconsin',
 }
+
+presidential_candidates_dem = [
+        "Clinton",
+        "O'Malley",
+        "Sanders"
+        
+]
