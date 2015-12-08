@@ -538,10 +538,12 @@ def generate_snapshot(party = None):
 					continue
 			race_poll_item_list = politician.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
 			values = []
+			value_dates = []
 			final_value = None
 			final_item = 0
-			for poll_item in race_poll_item_list[-3:]: 
+			for poll_item in race_poll_item_list[-5:]: 
 				values.append(poll_item.value)
+				value_dates.append([{'value' : poll_item.value, 'end_date' : poll_item.poll_date.strftime("%m-%d-%y"), 'pollster' : poll_item.political_poll_question.pollster_str}])
 				if final_item == 2:
 					final_value = poll_item.value
 				final_item += 1
@@ -554,7 +556,8 @@ def generate_snapshot(party = None):
 					"slug" : politician.slug,
 					"name" : politician.slug_human,
 					"uuid" : politician.uuid,
-					"final_value" : final_value }),
+					"final_value" : final_value,
+					"final_value_list" :  value_dates}), 
 			elif party == 'gop':
 				politician_snapshot_list_gop.append({
 					"office" : politician.seeking_office,

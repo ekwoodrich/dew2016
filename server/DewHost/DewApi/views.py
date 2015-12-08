@@ -39,6 +39,26 @@ def politician_select(dew_id):
 def us_pres_snapshot():
     return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
     
+@app.route("/elections/us/presidential/<party>/snapshot")
+def us_pres_party_snapshot(party):
+    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
+    
+@app.route("/elections/us/senate/snapshot")
+def us_senate_snapshot():
+    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
+    
+@app.route("/elections/us/senate/<party>/snapshot")
+def us_senate_party_snapshot(party):
+    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
+    
+@app.route("/elections/us/governor/snapshot")
+def us_gov_snapshot():
+    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
+    
+@app.route("/elections/us/governor/<party>/snapshot")
+def us_gov_party_snapshot(party):
+    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
+    
 @app.route("/snapshot/us/gop.html")
 def gop_snapshot():
     summary_region = Region.query.filter_by(abv='US').first()
