@@ -1,3 +1,4 @@
+from __future__ import division
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 from flask import Flask
@@ -9,7 +10,6 @@ import pprint
 from politics import presidential_candidates_dem, presidential_candidates_gop
 from datetime import datetime, date
 import json
-from flask.ext.superadmin import Admin, model
 
 
 app = Flask(__name__)
@@ -48,6 +48,28 @@ class Politician(db.Model):
 	
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
+	
+	def get_recent_values(self, region, pollster = None, num_values = 5, election_year = 2016, office = None):
+		if not office:
+			office = self.seeking_office
+		race_poll_item_list = self.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
+		values = []
+		recent_value_list = []
+		final_value = None
+		final_item = 0
+		
+		for poll_item in race_poll_item_list[-num_values:]: 
+			values.append(poll_item.value)
+			recent_value_list.append([{
+				'value' : poll_item.value, 
+				'end_date' : poll_item.poll_date.strftime("%m-%d-%y"), 
+				'pollster' : poll_item.political_poll_question.pollster_str,
+				'uuid' : poll_item.political_poll_question.uuid}])
+			if final_item == 4:
+				final_value = poll_item.value
+			final_item += 1
+		current_value = sum(values) / num_values
+		return {'slug_human' : self.slug_human, 'slug' : self.slug, 'uuid' : self.uuid, 'party' : self.party, 'current_value' : current_value, 'recent_values' : recent_value_list}
 	
 	def url(self):
 		return "/us/politician/" + self.slug
@@ -322,6 +344,7 @@ class PoliticalPollQuestion(db.Model):
 		
 	
 	def set_dewhash(self):
+		"""Generates and saves the dewhash for deduping."""
 		self.uuid = str(uuid.uuid1())
 		
 		dewhash = hashlib.sha224()
@@ -382,6 +405,7 @@ class PollItem(db.Model):
 	dewhash = db.Column(db.String(255), unique = True)
 	
 	def set_dewhash(self):
+		"""Generates and saves the dewhash for deduping."""
 		self.uuid = str(uuid.uuid1())
 		
 		dewhash = hashlib.sha224()
@@ -406,6 +430,7 @@ class Pollster(db.Model):
 	dewhash = db.Column(db.String(255), unique = True)
 	
 	def set_dewhash(self):
+		"""Generates and saves the dewhash for deduping."""
 		self.uuid = str(uuid.uuid1())
 		
 		dewhash = hashlib.sha224()
@@ -518,8 +543,15 @@ class PollUpdateReport(db.Model):
 	def summary_complete(self):
 		self.poll_summary_success = True
 		
-
-
+class Election():
+	def __init__(self, region, race):
+		self.region = region
+		self.race = race
+	def generate_snapshot(party = None):
+		pass
+	def get_snapshot(party = None):
+		pass
+	
 def generate_snapshot(party = None):
 	
 	
@@ -529,6 +561,7 @@ def generate_snapshot(party = None):
 	
 	for party in ['dem', 'gop']:
 		politician_list = Politician.query.filter_by(seeking_office = "president", party = party)
+		
 		for politician in politician_list:
 			if party == 'dem':
 				if not politician.last_name in presidential_candidates_dem:
@@ -536,46 +569,24 @@ def generate_snapshot(party = None):
 			elif party == 'gop':
 				if not politician.last_name in presidential_candidates_gop:
 					continue
-			race_poll_item_list = politician.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
-			values = []
-			value_dates = []
-			final_value = None
-			final_item = 0
-			for poll_item in race_poll_item_list[-5:]: 
-				values.append(poll_item.value)
-				value_dates.append([{'value' : poll_item.value, 'end_date' : poll_item.poll_date.strftime("%m-%d-%y"), 'pollster' : poll_item.political_poll_question.pollster_str}])
-				if final_item == 2:
-					final_value = poll_item.value
-				final_item += 1
+					
 			
 			if party == 'dem':
-				politician_snapshot_list_dem.append({
-					"office" : politician.seeking_office,
-					"value" : float(sum(values))/float(3),
-					"region" : region.abv,
-					"slug" : politician.slug,
-					"name" : politician.slug_human,
-					"uuid" : politician.uuid,
-					"final_value" : final_value,
-					"final_value_list" :  value_dates}), 
+				politician_snapshot_list_dem.append(politician.get_recent_values(region))
+					 
 			elif party == 'gop':
-				politician_snapshot_list_gop.append({
-					"office" : politician.seeking_office,
-					"value" : float(sum(values))/float(3),
-					"region" : region.abv,
-					"slug" : politician.slug,
-					"name" : politician.slug_human,
-					"uuid" : politician.uuid,
-					"final_value" : final_value }) 
+				politician_snapshot_list_gop.append(politician.get_recent_values(region))
+					 
 	return [{"party" : "dem", 
 			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
 				"date" : date.today().strftime("%m-%d-%y"),
 				"list" : sorted(politician_snapshot_list_dem, 
-					key = lambda snapshot : snapshot['value'], 
+					key = lambda snapshot : snapshot['current_value'], 
 					reverse = True)}},
 			{"party" : "gop", 
 			"snapshot" : {"title"  : "GOP - US Presidential Race Snapshot",
 				"date" : date.today().strftime("%m-%d-%y"),
 				"list" : sorted(politician_snapshot_list_gop, 
-					key = lambda snapshot : snapshot['value'], 
+					key = lambda snapshot : snapshot['current_value'], 
 					reverse = True)}}]
+					

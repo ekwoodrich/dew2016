@@ -3,7 +3,6 @@ from DewServer import app as dewserver
 from DewApi import app as dewapi
 from DewApi.models import db as dewapidb
 from DewApi.models import PollItem
-from flask.ext.restless import APIManager, url_for
 
 from werkzeug.wsgi import DispatcherMiddleware
 from werkzeug.serving import run_simple

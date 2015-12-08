@@ -1,5 +1,6 @@
 import json
 from pprint import pprint
+import os
 
 with open('secrets.json') as data_file:    
     data = json.load(data_file)
@@ -8,7 +9,6 @@ with open('secrets.json') as data_file:
 DEBUG = True
 
 # Define the application directory
-import os
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))  
 
 DATABASE_CONNECT_OPTIONS = {}

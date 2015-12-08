@@ -1,3 +1,17 @@
+import csv
+
+def load_538_pollster_tsv(tsv_filename):
+
+                
+        with open('sample.txt','rb') as tsvin, open('new.csv', 'wb') as csvout:
+                tsvin = csv.reader(tsvin, delimiter='\t')
+                csvout = csv.writer(csvout)
+                
+                for row in tsvin:
+                        count = int(row[4])
+                        if count > 0:
+                                csvout.writerows([row[2:4] for _ in xrange(count)])
+                        
 
 states = {
         'AK': 'Alaska',
