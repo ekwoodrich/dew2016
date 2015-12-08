@@ -1,15 +1,32 @@
 from DewApi import app
 from models import PoliticalPoll, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
 import flask.ext.restless
+from flask.ext.restless import url_for, APIManager
 from json2html import *
 import json
 from datetime import datetime
 import jsonpickle
 from sqlalchemy import desc
+from flask import Response
+
 @app.route("/")
 def hello():
     return "Dewcaucus API"
 
+@app.route("/politicians/")
+def politician_all():
+    politician_list = Politician.query.limit(10).all()
+    
+    response_list = []
+    
+    for politician in politician_list:
+        response_list.append({'name' : politician.slug_human, 'slug': politician.slug, "uuid" : politician.uuid})
+        
+    return Response(json.dumps(response_list), mimetype = "text/json")
+    
+@app.route("/politicians/<dew_id>")
+def politician_select(dew_id):
+    return "politicians"
 @app.route("/snapshot/us/gop.html")
 def gop_snapshot():
     summary_region = Region.query.filter_by(abv='US').first()
@@ -52,15 +69,7 @@ def dem_snapshot():
         return output_html
     else:
         return "No snapshots found."
-@app.route("/api/reset_polls")
+@app.route("/reset_polls")
 def reset_polls():
     return "Polls Reset"
-manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 
-manager.create_api(PollUpdateReport, methods=['GET'])
-manager.create_api(ElectionSummary, exclude_columns = ['snapshot_blob'], methods=['GET'])
-manager.create_api(CandidateSummary, methods=['GET'])
-manager.create_api(PollItem, methods=['GET'])
-manager.create_api(PoliticalPoll, methods=['GET'], primary_key = 'dewid', exclude_columns=['survey', 'survey_uuid'])
-manager.create_api(Region, methods=['GET'])
-manager.create_api(Politician, exclude_columns = ['poll_items'], methods=['GET'], primary_key = 'slug')

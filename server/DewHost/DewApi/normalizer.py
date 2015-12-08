@@ -12,12 +12,14 @@ head_to_head_huffpo_uri = 'http://elections.huffingtonpost.com/pollster/api/poll
 horserace_huffpo_uri_gop = 'http://elections.huffingtonpost.com/pollster/api/polls?topic=2016-president-gop-primary'
 horserace_huffpo_uri_dem = 'http://elections.huffingtonpost.com/pollster/api/polls?topic=2016-president-dem-primary'
 
-horserace_huffpo_chart_uri = 'http://elections.huffingtonpost.com/pollster/api/charts?topic=2016-president'
+head_to_head_huffpo_senate_uri = 'http://elections.huffingtonpost.com/pollster/api/charts?topic=2016-president'
 
 
 
+senate_huffpo_head_to_head_uri = 'http://elections.huffingtonpost.com/pollster/api/polls?topic=2016-senate'
 
-def get_huffpo_poll_set(poll_type, after = '2014-11-1'):
+
+def get_huffpo_poll_set(poll_type, after = '2014-11-1', race='president'):
 
 	huffpo_poll_list = []
 	page_num = 0
@@ -25,16 +27,21 @@ def get_huffpo_poll_set(poll_type, after = '2014-11-1'):
 	#print (head_to_head_huffpo_uri + '&page=' + str(page_num))
 	
 	while True:
-
-		if poll_type == "head_to_head":
-			response = urllib2.urlopen(head_to_head_huffpo_uri + '&page=' + str(page_num) + "&after=" + after)
-		elif poll_type == "horserace_gop":	
-			response = urllib2.urlopen(horserace_huffpo_uri_gop + '&page=' + str(page_num) + "&after=" + after)
-		elif poll_type == "horserace_dem":
-			response = urllib2.urlopen(horserace_huffpo_uri_dem + '&page=' + str(page_num) + "&after=" + after)
-		elif poll_type == "chart":
-			response = urllib2.urlopen(horserace_huffpo_chart_uri)
-
+		if race == 'president':
+			if poll_type == "head_to_head":
+				response = urllib2.urlopen(head_to_head_huffpo_uri + '&page=' + str(page_num) + "&after=" + after)
+			elif poll_type == "horserace_gop":	
+				response = urllib2.urlopen(horserace_huffpo_uri_gop + '&page=' + str(page_num) + "&after=" + after)
+			elif poll_type == "horserace_dem":
+				response = urllib2.urlopen(horserace_huffpo_uri_dem + '&page=' + str(page_num) + "&after=" + after)
+			elif poll_type == "chart":
+				response = urllib2.urlopen(horserace_huffpo_chart_uri)
+		elif race == 'senate':
+			if poll_type == "head_to_head":
+				response = urllib2.urlopen(senate_huffpo_head_to_head_uri + '&page=' + str(page_num) + "&after=" + after)
+		
+		print race + " " + poll_type + " page " + str(page_num)
+		
 		html = response.read()
 		huffpo_poll_page = json.loads(html)
 		
@@ -338,6 +345,7 @@ def get_huffpo(after = '2014-11-01'):
 	horserace_gop = get_huffpo_horserace_gop(after)
 	horserace_dem = get_huffpo_horserace_dem(after)
 	head_to_head = get_huffpo_head_to_head(after)
+	senate_head_to_head = get_huffpo_head_to_head_senate(after)
 
 	for poll in horserace_gop:
 		poll_set.append(poll)
@@ -345,6 +353,8 @@ def get_huffpo(after = '2014-11-01'):
 	for poll in horserace_dem:
 		poll_set.append(poll)
 	for poll in head_to_head:
+		poll_set.append(poll)
+	for poll in senate_head_to_head:
 		poll_set.append(poll)
 
 	return poll_set
@@ -359,6 +369,10 @@ def get_huffpo_horserace_dem(after):
 	return normalize_huffpo_poll_list(poll_set, 'horserace_dem')
 def get_huffpo_head_to_head(after):
 	poll_set = get_huffpo_poll_set('head_to_head', after = after);
+
+	return normalize_huffpo_poll_list(poll_set, 'head_to_head')
+def get_huffpo_head_to_head_senate(after):
+	poll_set = get_huffpo_poll_set('head_to_head', after = after, race = 'senate');
 
 	return normalize_huffpo_poll_list(poll_set, 'head_to_head')
 

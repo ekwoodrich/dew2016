@@ -11,6 +11,14 @@ def generate_breadcrumbs():
 def index():    
     return render_template('index.html')    
 
+@app.route('/elections/pollsters/')
+def pollsters():
+    return render_template('pollsters.html')
+    
+@app.route('/elections/politicians/')
+def politicians():
+    return render_template('politicians.html')
+    
 @app.route('/elections/presidential/')
 def us_presidential():
     
@@ -43,7 +51,7 @@ def us_governor():
     return render_template('election_summary.html')
     
 @app.errorhandler(404)
-def not_found():
+def not_found(data=None):
     return render_template('404.html'), 201
     
     

@@ -13,7 +13,7 @@ from subprocess import call
 
 for abv, name in states.iteritems():
 	try:
-		reg = Region(national = False, name = name, abv = abv)
+		reg = Region(national = False, name = name, abv = abv, iso = "US-" + abv)
 		db.session.add(reg)
 		db.session.commit()
 		#print reg
@@ -21,7 +21,7 @@ for abv, name in states.iteritems():
 		db.session.rollback()
 		
 try:	
-	reg = Region(national = True, name = "United States", abv = "US")
+	reg = Region(national = True, name = "United States", abv = "US", iso = "US")
 	db.session.add(reg)
 	db.session.commit()
 except IntegrityError:
@@ -92,7 +92,8 @@ for poll in poll_list:
 					
 					if poll['poll_info']['poll_office']:
 						new_politician.seeking_office = poll['poll_info']['poll_office']
-					
+						
+					new_politician.set_dewhash()
 					db.session.add(new_politician)
 					new_poll_item.politician = new_politician
 			
@@ -135,13 +136,15 @@ for poll in poll_list:
 		for pollster in poll['pollster_info']['pollster_list']:
 			new_pollster = get_or_create(db.session, Pollster, name = pollster['name'], party = pollster['party'], group_type = pollster['group_type'])[0]	
 			new_poll.pollster_list.append(new_pollster)
+			
+			new_pollster.set_dewhash()
 		
 		
 		
 
 		new_poll.pollster_str = poll['pollster_info']['pollster_str']
 		
-		new_poll.set_dewid()
+		new_poll.set_dewhash()
 		
 		new_survey_query = get_or_create(db.session, PoliticalPoll,source_id = poll['poll_info']['poll_source_id'])
 		
@@ -159,7 +162,7 @@ for poll in poll_list:
 			new_survey_item.source = poll['poll_info']['poll_source']
 			new_survey_item.source_id = poll['poll_info']['poll_source_id']	
 			new_survey_item.source_uri = poll['poll_info']['poll_source_uri']
-			new_survey_item.set_dewid()
+			new_survey_item.set_dewhash()
 			
 			db.session.commit()
 

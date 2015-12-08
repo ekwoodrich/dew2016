@@ -15,14 +15,13 @@ app = Flask(__name__)
 
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/dew2016.db'
-app.secret_key = 'Add your secret key'
 
 
 db = SQLAlchemy(app)
 
 
 politician_polls = db.Table('politician_polls', 
-    	db.Column('political_poll_question_id', db.Integer, db.ForeignKey('political_poll_question.id')),
+    db.Column('political_poll_question_id', db.Integer, db.ForeignKey('political_poll_question.id')),
 	db.Column('politician_id', db.Integer, db.ForeignKey('politician.id'))
 )
 
@@ -37,7 +36,9 @@ class Politician(db.Model):
 	slug = db.Column(db.String(120))
 	slug_human = db.Column(db.String(120))
 	party = db.Column(db.String(20))
+	dewhash = db.Column(db.String(255), unique = True)
 	
+	uuid = db.Column(db.String(255))
 	region_id = db.Column(db.Integer, db.ForeignKey('region.id'))	
 	
 	seeking_office = db.Column(db.String(120))	
@@ -47,6 +48,20 @@ class Politician(db.Model):
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
+	
+	def set_dewhash(self):
+		self.uuid = str(uuid.uuid1())
+		
+		dewhash = hashlib.sha224()
+		
+		dewhash.update(str(self.slug_human))
+		dewhash.update(str(self.party))
+		
+		if not dewhash.hexdigest():
+			self.set_dewhash()
+
+		self.dewhash = 'dewhash-' + dewhash.hexdigest()
+		
 	def update(self):
 		self.slug = str(self.first_name).lower() + "_" + str(self.last_name).lower()
 		self.slug_human = str(self.first_name) + " " + str(self.last_name)
@@ -226,7 +241,7 @@ class PoliticalPoll(db.Model):
 	__tablename__ = 'political_poll'
 	
 	id = db.Column(db.Integer, primary_key=True)
-	dewid = db.Column(db.String(255), unique = True)
+	dewhash = db.Column(db.String(255), unique = True)
 	
 	election_year = db.Column(db.Integer, default = 2016)
 	
@@ -250,14 +265,16 @@ class PoliticalPoll(db.Model):
 	source_uri = db.Column(db.String(256))
 
 	
-	def set_dewid(self):
-		dewid = hashlib.md5()
+	def set_dewhash(self):
+		self.uuid = str(uuid.uuid1())
 		
-		dewid.update(str(self.source_id))
-		if not dewid.hexdigest():
-			self.set_dewid()
+		dewhash = hashlib.sha224()
+		
+		dewhash.update(str(self.source_id))
+		if not dewhash.hexdigest():
+			self.set_dewhash()
 
-		self.dewid = 'dewid-' + dewid.hexdigest()[0:6]
+		self.dewhash = 'dewhash-' + dewhash.hexdigest()
 		
 	def __str__(self):
 		return (str(self.election_year) + " " + str(self.pollster_str) + " " + str(self.region) + " " + "\n") 
@@ -269,8 +286,8 @@ class PoliticalPollQuestion(db.Model):
 	
 	id = db.Column(db.Integer, primary_key=True)
 
-	survey_uuid = db.Column(db.String(255))
-	dewid = db.Column(db.String(255), unique = True)
+	uuid = db.Column(db.String(255))
+	dewhash = db.Column(db.String(255), unique = True)
 	
 	title = db.Column(db.String(255))
 	
@@ -301,35 +318,37 @@ class PoliticalPollQuestion(db.Model):
 	poll_items = db.relationship('PollItem', backref='political_poll_question', lazy = 'dynamic')	
 		
 	
-	def set_dewid(self):
-		dewid = hashlib.md5()
+	def set_dewhash(self):
+		self.uuid = str(uuid.uuid1())
+		
+		dewhash = hashlib.sha224()
 		
 		poll_item_hash = ''
 	
 		for poll in self.poll_items:
 			poll_item_hash += str(poll.choice)
 			poll_item_hash += str(poll.value)
-		dewid.update(poll_item_hash)
-		dewid.update(self.title)
-		dewid.update(str(self.pollster_str))
-		dewid.update(self.start_date.ctime())
-		dewid.update(self.end_date.ctime())
-		dewid.update(str(self.office))
-		dewid.update(str(self.region_id))
-		dewid.update(str(self.poll_class))
-		dewid.update(str(self.party))
-		dewid.update(str(self.sample))
-		dewid.update(str(self.screen))
-		dewid.update(str(self.method))
-		dewid.update(str(self.margin_of_error))
+		dewhash.update(poll_item_hash)
+		dewhash.update(self.title)
+		dewhash.update(str(self.pollster_str))
+		dewhash.update(self.start_date.ctime())
+		dewhash.update(self.end_date.ctime())
+		dewhash.update(str(self.office))
+		dewhash.update(str(self.region_id))
+		dewhash.update(str(self.poll_class))
+		dewhash.update(str(self.party))
+		dewhash.update(str(self.sample))
+		dewhash.update(str(self.screen))
+		dewhash.update(str(self.method))
+		dewhash.update(str(self.margin_of_error))
 		
-		if not dewid.hexdigest():
-			self.set_dewid()
+		if not dewhash.hexdigest():
+			self.set_dewhash()
 
-		self.dewid = 'dewid-' + dewid.hexdigest()
+		self.dewhash = 'dewhash-' + dewhash.hexdigest()
 	
 	def __str__(self):
-		return (str(self.pollster_str) + " " + self.title + " " + "\n" + self.dewid + "\n" + "[" + str(self.poll_class) + "]" + "\n") 
+		return (str(self.pollster_str) + " " + self.title + " " + "\n" + self.dewhash + "\n" + "[" + str(self.poll_class) + "]" + "\n") 
 		
 
 class PollItem(db.Model):
@@ -355,7 +374,23 @@ class PollItem(db.Model):
 	poll_date_str = db.Column(db.String(80))
 	poll_date = db.Column(db.DateTime)
 
+	uuid = db.Column(db.String(255))
 	
+	dewhash = db.Column(db.String(255), unique = True)
+	
+	def set_dewhash(self):
+		self.uuid = str(uuid.uuid1())
+		
+		dewhash = hashlib.sha224()
+		
+		dewhash.update(str(self.poll_class))
+		dewhash.update(str(self.choice))
+		dewhash.update(str(self.poll_date_str))
+		
+		if not dewhash.hexdigest():
+			self.set_dewhash()
+
+		self.dewhash = 'dewhash-' + dewhash.hexdigest()
 class Pollster(db.Model):
 	__tablename__ = 'political_pollster'
 	
@@ -364,6 +399,22 @@ class Pollster(db.Model):
 	party = db.Column(db.String(20))
 	group_type = db.Column(db.String(60))
 	
+	uuid = db.Column(db.String(255))
+	dewhash = db.Column(db.String(255), unique = True)
+	
+	def set_dewhash(self):
+		self.uuid = str(uuid.uuid1())
+		
+		dewhash = hashlib.sha224()
+		
+		dewhash.update(unicode(self.name))
+		dewhash.update(str(self.party))
+		dewhash.update(str(self.group_type))
+		
+		if not dewhash.hexdigest():
+			self.set_dewhash()
+
+		self.dewhash = 'dewhash-' + dewhash.hexdigest()
 	def __str__(self):
 		return self.name	
 	
@@ -375,6 +426,7 @@ class Region(db.Model):
 	national = db.Column(db.Boolean, default = False)
 	name = db.Column(db.String(48), unique=True)
 	abv = db.Column(db.String(3), unique=True)
+	iso = db.Column(db.String(10), unique=True)
 		
 	poll_items = db.relationship('PollItem', backref = 'region')
 	polls = db.relationship('PoliticalPollQuestion', backref = 'region')
