@@ -64,6 +64,11 @@ class Politician(db.Model):
 	party = db.Column(db.String(20))
 	dewhash = db.Column(db.String(255), unique = True)
 	
+	bio = db.Column(db.Text)
+	birthday = db.Column(db.DateTime)
+	birthplace = db.Column(db.Text)
+	website = db.Column(db.Text)
+	
 	uuid = db.Column(db.String(255))
 	region_id = db.Column(db.Integer, db.ForeignKey('region.id'))	
 	
@@ -75,6 +80,9 @@ class Politician(db.Model):
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
 	
+	def current_age(self):
+		return 41
+		
 	def encapsulate_payload(self, payload):
 				return {
 					'slug_human' : self.slug_human, 
@@ -87,7 +95,9 @@ class Politician(db.Model):
 					'payload': payload,
 					'url' : self.url()}
 	
-	def recent_values(self, region, pollster = None, num_values = 5, election_year = 2016, office = None):
+	def current_poll_rank(self, region):
+		pass
+	def recent_poll_values(self, region, pollster = None, num_values = 5, election_year = 2016, office = None):
 		if not office:
 			office = self.seeking_office
 		race_poll_item_list = self.poll_items.filter_by(poll_class = "horse_race", office = "president", region = region).order_by(PollItem.poll_date.asc())
@@ -108,10 +118,12 @@ class Politician(db.Model):
 				final_value = poll_item.value
 			final_item += 1
 		current_value = sum(values) / num_values
-		return self.encapsulate_payload({'current_value' : current_value, 'recent_values' : recent_value_list})
+		if current_value == 0:
+			current_value = .1
+		return self.encapsulate_payload({'current_value' : current_value, 'recent_poll_values' : recent_value_list})
 	
 	def url(self):
-		return "/politician/us/" + self.slug + "/"
+		return "/politicians/us/" + self.slug + "/"
 	
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
@@ -309,6 +321,9 @@ class PoliticalPoll(db.Model):
 	
 	election_year = db.Column(db.Integer, default = 2016)
 	
+	added_date = db.Column(db.DateTime)
+	start_date = db.Column(db.DateTime)
+	end_date = db.Column(db.DateTime)
 
 	uuid = db.Column(db.String(255))
 	
@@ -329,11 +344,15 @@ class PoliticalPoll(db.Model):
 	source_uri = db.Column(db.String(256))
 
 	
+	def primary_pollster(self):
+		for pollster in self.pollster_list:
+			if pollster.group_type == "pollster":
+				return pollster
 	def slug(self):
 		return slugify(self.pollster_str + "_" + self.uuid[0:6])
 		
 	def url(self):
-		return "/pollsters/polls/" + self.slug() + "/"
+		return "/pollsters/" + slugify(str(self.pollster_str)) + "/polls/" + self.slug() + "/"
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
 		
@@ -386,6 +405,9 @@ class PoliticalPollQuestion(db.Model):
 
 	poll_items = db.relationship('PollItem', backref='political_poll_question', lazy = 'dynamic')	
 		
+	source = db.Column(db.String(48))
+	source_id = db.Column(db.Integer)
+	
 	def slug(self):
 		return slugify(self.title)
 		
@@ -491,7 +513,7 @@ class Pollster(db.Model):
 		
 		dewhash = hashlib.sha224()
 		
-		dewhash.update(unicode(self.name))
+		dewhash.update(unicode(self.name).encode("utf8"))
 		dewhash.update(str(self.party))
 		dewhash.update(str(self.group_type))
 		
@@ -608,10 +630,10 @@ def generate_snapshot(party = None):
 					
 			
 			if party == 'dem':
-				politician_snapshot_list_dem.append(politician.recent_values(region))
+				politician_snapshot_list_dem.append(politician.recent_poll_values(region))
 					 
 			elif party == 'gop':
-				politician_snapshot_list_gop.append(politician.recent_values(region))
+				politician_snapshot_list_gop.append(politician.recent_poll_values(region))
 					 
 	return [{"party" : "dem", 
 			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",

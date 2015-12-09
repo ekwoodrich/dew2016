@@ -20,7 +20,7 @@ def pollsters():
 def pollster_selcet(pollster_slug):
     return Response(json.dumps(""), mimetype = "text/json")
     
-@app.route("/politicians/")
+@app.route("/politicians/us/")
 def politician_all():
     politician_list = Politician.query.all()
     
@@ -34,14 +34,27 @@ def politician_all():
             'slug': politician.slug, 'uuid' : politician.uuid, 
             'seeking_office' : politician.seeking_office, 
             'party' : politician.party, 
+            'region' : politician.region, 
             'url' : politician.url()})
         
     return Response(json.dumps(response_list), mimetype = "text/json")
     
-@app.route("/politicians/<dew_id>")
-def politician_select(dew_id):
-    return "politicians"
-    
+@app.route("/politicians/us/<slug>")
+def politician_select(slug):
+    politician = Politician.query.filter_by(slug = slug).first()
+
+    if politician:
+        return Response(json.dumps({
+            'name' : politician.slug_human, 
+            'first_name' : politician.first_name, 
+            'last_name' : politician.last_name, 
+            'slug': politician.slug, 'uuid' : politician.uuid, 
+            'seeking_office' : politician.seeking_office, 
+            'party' : politician.party, 
+            'region' : politician.region, 
+            'url' : politician.url()}), mimetype = "text/json")
+    else:
+        return "not found"   
 @app.route("/elections/us/presidential/snapshot")
 def us_pres_snapshot():
     return Response(json.dumps(generate_snapshot()), mimetype = "text/json")

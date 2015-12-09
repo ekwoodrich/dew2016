@@ -38,6 +38,25 @@ poll_count = 0
 poll_iteration = 0
 
 update_pollset = False
+
+if 'fix_orphan' in sys.argv:
+		
+	print "Repairing orphaned poll questions..."
+	
+	orphan_list = PoliticalPollQuestion.query.filter_by(survey_id = None)
+	
+	for orphan in orphan_list:
+		likely_parent = PoliticalPoll.query.filter_by(source_id = orphan.source_id).first()
+		
+		if likely_parent:
+			orphan.survey_id = likely_parent.id
+			
+			db.session.add(orphan)
+			print "Fixed orphan " + orphan.uuid
+			print "Likely child of " + str(orphan.source_id)
+	print "Finished all possible repairs."
+	db.session.commit()
+	sys.exit()
 if 'summary_only' in sys.argv:
 	print 'Generating new snapshot'
 	
@@ -132,6 +151,8 @@ for poll in poll_list:
 
 		new_poll.added_date = datetime.now()
 
+		new_poll.source = poll['poll_info']['poll_source']
+		new_poll.source_id = poll['poll_info']['poll_source_id']	
 		
 		for pollster in poll['pollster_info']['pollster_list']:
 			new_pollster = get_or_create(db.session, Pollster, name = pollster['name'], party = pollster['party'], group_type = pollster['group_type'])[0]	
@@ -146,7 +167,7 @@ for poll in poll_list:
 		
 		new_poll.set_dewhash()
 		
-		new_survey_query = get_or_create(db.session, PoliticalPoll,source_id = poll['poll_info']['poll_source_id'])
+		new_survey_query = get_or_create(db.session, PoliticalPoll, end_date = poll['poll_info']['poll_date']['poll_end_date'], source = poll['poll_info']['poll_source'], source_id = poll['poll_info']['poll_source_id'])
 		
 		if new_survey_query[1]:
 			new_survey_source_id  = new_survey_query[0].id
@@ -199,7 +220,15 @@ for poll in poll_list:
 			break	
 		
 
+print "Repairing orphaned poll questions..."
 
+orphan_list = PoliticalPollQuestion.query.filter_by(survey_id = None)
+
+for orphan in orphan_list:
+	likely_parent = PoliticalPoll.query.filter_by(source_id = orphan.source_id).first()
+	
+	if likely_parent:
+		orphan.survey = likely_parent
 
 print "COMPLETE"
 print "new polls:"
