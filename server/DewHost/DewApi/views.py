@@ -39,6 +39,52 @@ def politician_all():
         
     return Response(json.dumps(response_list), mimetype = "text/json")
     
+@app.route("/polls/")
+def polls():		
+    region = Region.query.filter_by(abv='US').first()
+    poll_list = PoliticalPoll.query.order_by(PoliticalPoll.start_date.desc()).limit(10)
+    
+    poll_list_json = []
+    
+    for poll in poll_list:
+        poll_region_list = []
+        poll_question_list = []
+        
+        for poll_question in poll.polls:
+            poll_choice_list = []
+            for poll_item in poll_question.poll_items:
+                if poll_question.poll_class == 'horse_race' or poll_question.poll_class == 'head_to_head':
+                    if poll_item.other:
+                        poll_choice_list.append({'choice' : 'Undecided/Unknown', 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+                    else:  
+                        poll_choice_list.append({'choice' : poll_item.choice, 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+                else:
+                    poll_choice_list.append({'choice' : poll_item.choice, 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+            poll_question_list.append({
+                'title' : poll_question.title,
+                'sample_size' : poll_question.sample,
+                'method' : poll_question.method,
+                'screen' : poll_question.screen,
+                'poll_class' : poll_question.poll_class,
+                'choices' : poll_choice_list
+            })
+            poll_region_dict = {'name' : poll_question.region.name, 'abv': poll_question.region.abv, 'url' : poll_question.region.url()}
+            
+            if poll_region_dict not in poll_region_list:
+                poll_region_list.append(poll_region_dict)
+                
+        poll_list_json.append({
+          'pollster' : poll.pollster_str,
+          'start_date' : poll.start_date.strftime("%m-%d-%y"),
+          'end_date' : poll.end_date.strftime("%m-%d-%y"),
+          'url' : poll.url(),
+          'source_url' : poll.source_uri,
+          'regions' : poll_region_list,
+          'questions' : poll_question_list
+            
+        })
+    return Response(json.dumps(poll_list_json), mimetype = "text/json")
+    
 @app.route("/politicians/us/<slug>")
 def politician_select(slug):
     politician = Politician.query.filter_by(slug = slug).first()
@@ -79,7 +125,15 @@ def us_gov_snapshot():
 def us_gov_party_snapshot(party):
     return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
     
-@app.route("/reset_polls")
+@app.route("/admin/reset_polls")
 def reset_polls():
     return "Polls Reset"
+    
+@app.route("/admin/update_polls")
+def update_polls():
+    return "Polls Updated"
+
+@app.route("/admin/poll_summary")
+def poll_summary():
+    return "Poll Summary"
 

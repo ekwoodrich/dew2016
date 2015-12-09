@@ -66,9 +66,9 @@ class Politician(db.Model):
 	
 	bio = db.Column(db.Text)
 	birthday = db.Column(db.DateTime)
-	birthplace = db.Column(db.Text)
 	website = db.Column(db.Text)
 	
+	info_json = db.Column(db.Text)
 	uuid = db.Column(db.String(255))
 	region_id = db.Column(db.Integer, db.ForeignKey('region.id'))	
 	
@@ -79,9 +79,7 @@ class Politician(db.Model):
 	poll_items = db.relationship('PollItem', backref='politician', lazy = 'dynamic')			
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
-	
-	def current_age(self):
-		return 41
+	 
 		
 	def encapsulate_payload(self, payload):
 				return {
@@ -349,7 +347,7 @@ class PoliticalPoll(db.Model):
 			if pollster.group_type == "pollster":
 				return pollster
 	def slug(self):
-		return slugify(self.pollster_str + "_" + self.uuid[0:6])
+		return slugify(self.pollster_str + "_" + self.uuid[0:6]+ "_" + self.end_date.strftime("%m%d%y"))
 		
 	def url(self):
 		return "/pollsters/" + slugify(str(self.pollster_str)) + "/polls/" + self.slug() + "/"

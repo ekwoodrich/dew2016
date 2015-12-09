@@ -99,6 +99,7 @@ for poll in poll_list:
 			new_poll_item.poll_date = poll['poll_info']['poll_date']['poll_end_date']
 			new_poll_item.poll_date_str = poll['poll_info']['poll_date']['poll_end_date'].strftime('%Y-%m-%d')
 
+			new_poll_item.other = estimate['other'] 
 			new_poll_item.office = poll['poll_info']['poll_office'] 
 			if 'first_name' in estimate:
 				if estimate['first_name']:
