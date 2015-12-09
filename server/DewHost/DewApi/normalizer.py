@@ -81,8 +81,8 @@ def normalize_date(poll):
 def normalize_favor(estimates, poll_estimate):
 	very_normal_estimates = []
 	
-	semi_normal_estimates = convert_confused_responses(estimates)
-	normal_estimates = normalize_other_response(semi_normal_estimates)
+	semi_normal_estimates = convert_confused_responses(poll_estimate['poll_stats']['poll_class'], estimates)
+	normal_estimates = semi_normal_estimates
 	
 	for estimate in normal_estimates:
 		estimate['poll_class'] = 'favorable'
@@ -97,8 +97,8 @@ def normalize_favor(estimates, poll_estimate):
 def normalize_horsetrack(estimates, poll_estimate):
 	very_normal_estimates = []
 	
-	semi_normal_estimates = convert_confused_responses(estimates)
-	normal_estimates = normalize_other_response(semi_normal_estimates)
+	semi_normal_estimates = convert_confused_responses(poll_estimate['poll_stats']['poll_class'], estimates)
+	normal_estimates = normalize_other_response(poll_estimate['poll_stats']['poll_class'], semi_normal_estimates)
 	
 	for estimate in normal_estimates:
 		estimate['poll_class'] = poll_estimate['poll_stats']['poll_class'] 	
@@ -110,28 +110,36 @@ def normalize_horsetrack(estimates, poll_estimate):
 		very_normal_estimates.append(estimate)
 	return very_normal_estimates
 
-def normalize_other_response(estimates):
+def normalize_other_response(poll_class, estimates):
 	other_value = 0.0
+	other_present = False
 	normal_estimates = []
 
+	if poll_class == 'unknown' or poll_class == 'favorable':
+		return estimates
+		
 	for estimate in estimates:
 		
 		if estimate['other']:
 			other_value += estimate['value']
-			normal_estimates.append(estimate)
+			other_present = True
 		else:
 			normal_estimates.append(estimate)
-
+			
+	if other_present:
+		normal_estimates.append({'choice' : 'Undecided/Unknown', 'value' : other_value, 'other' : True, 'first_name' : '', 'last_name' : ''})
 
 	return normal_estimates
 	
-def convert_confused_responses(response_list):
+def convert_confused_responses(poll_class, response_list):
 	normal_responses = []
-	
 	for response in response_list:
-		if 'first_name' in response and response['first_name']:
+		if poll_class == 'unknown' or poll_class == 'favorable':
+			response['other'] = False 	
 			normal_responses.append(response)
-			response['other'] = False 			
+		elif 'first_name' in response and response['first_name']:
+			response['other'] = False 
+			normal_responses.append(response)			
 		else:
 			response['other'] = True
 			normal_responses.append(response)

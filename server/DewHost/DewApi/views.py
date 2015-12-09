@@ -54,20 +54,29 @@ def polls():
             poll_choice_list = []
             for poll_item in poll_question.poll_items:
                 if poll_question.poll_class == 'horse_race' or poll_question.poll_class == 'head_to_head':
+                    politician = Politician.query.filter_by(slug_human = poll_item.choice).first()
+                    politician_url = ''
+                    
+                    if politician:
+                        politician_url = politician.url()
+                    else:
+                        politician_url = ''
                     if poll_item.other:
-                        poll_choice_list.append({'choice' : 'Undecided/Unknown', 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+                        poll_choice_list.append({'choice' : 'Undecided/Unknown', 'value' : poll_item.value, 'other' : poll_item.other})
                     else:  
-                        poll_choice_list.append({'choice' : poll_item.choice, 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+                        poll_choice_list.append({'choice' : poll_item.choice,  'url' : politician_url, 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
                 else:
                     poll_choice_list.append({'choice' : poll_item.choice, 'value' : poll_item.value, 'party' : poll_item.party, 'other' : poll_item.other})
+            
             poll_question_list.append({
                 'title' : poll_question.title,
                 'sample_size' : poll_question.sample,
                 'method' : poll_question.method,
                 'screen' : poll_question.screen,
                 'poll_class' : poll_question.poll_class,
-                'choices' : poll_choice_list
+                'choices' : poll_choice_list,
             })
+            
             poll_region_dict = {'name' : poll_question.region.name, 'abv': poll_question.region.abv, 'url' : poll_question.region.url()}
             
             if poll_region_dict not in poll_region_list:
