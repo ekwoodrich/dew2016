@@ -1,0 +1,7 @@
+from pyparsing import Word, Literal, alphas
+
+salutation     = Word( alphas + "'" )
+comma          = Literal(",")
+greetee        = Word( alphas )
+endPunctuation = Literal("!")
+

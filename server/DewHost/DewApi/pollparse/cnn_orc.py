@@ -2,17 +2,16 @@ import os
 from arpeggio import *
 from arpeggio import RegExMatch as _
 
-def Number():	return _'\d'_
-def String(): return _'"', None, '"'_
+def pollNumber():	return _(r'\d')
+def pollString(): return '"', None, '"'
 
-def Month(): return ['Jan', 'Feb']
+def pollMonth(): return ['Jan', 'Feb']
+def pollYear(): return ['Jan', 'Feb']
 
-def Percentage(): return Number, "%"
-def Asterisk(): return '*'
-def Missing(): return '---'
+parsers = ParserPython(pollFile)
 
-def Parenthetical(): return '(', None ,')'
-def QuestionNumber(): return Number, '.'
-def QuestionString(): return OneOrMore([Parenthetical, String])
+current_dir = os.path.dirname(__file__)
+testdata = open(os.path.join(currrent_dir, 'db/cnnorc.txt',)).read()
 
-def Question(): return Optional(QuestionNumber), QuestionString
+parse_tree = parser.parse(testdata)
+print parse_tree
