@@ -33,7 +33,7 @@ table_row = Group(OneOrMore(percentage))
 date_yr = Group(months + digits)
 digits = Word(nums)
 string = Word(alphas + nums +  ':'   "'" + '?' + '"' + '/' + ' ' + '(' + ')' + ':' + ',' + '-' + '.')
-quote = Group(QuotedString('"', multiline=True)) | Group(QuotedString('(', endQuoteChar=')', multiline=True))  |  Group(QuotedString('W', endQuoteChar='?', multiline=True)) 
+quote = Group(QuotedString('"', multiline=True)) | Group(QuotedString('(', endQuoteChar=')', multiline=True, unquoteResults = False))  |  Group(QuotedString('W', endQuoteChar='?', multiline=True, unquoteResults = False)) 
 #print page_test
 table_header = Group(Group(OneOrMore(months)) + Group(OneOrMore(digits)))
 table = Group(table_header + Group(OneOrMore(table_item)))
@@ -41,7 +41,7 @@ quote_block = Group(OneOrMore(quote))
 
 
 num_quote_block = Group(page_num + OneOrMore(quote))
-question_block_num = question_num.setResultsName('question_num')
+question_block_num = question_num.setResultsName('question_number')
 question_block_table = table.setResultsName('question_table')
 question_block_quote = quote_block.setResultsName('question_quote')
 
@@ -52,41 +52,9 @@ group = OneOrMore(block)
 # Parse the results
 result = group.parseString( TEXT )
 #print page_test.encode('ascii', 'ignore')
+
 for item in result:
-    print item
-    if 'question_num' in item:
-        print item.keys()
-    
-
-page_num = Suppress("-") + digits + Suppress('-')
-string = Word(alphas + nums + ':'   "'" + '?' + '"' + '/' + ' ' + '(' + ')' + ':' + ',' + '-' + '.')
-poll_screen = Group('(' + string  + ':)' )
-poll_table_choice = Literal('FAVORABLE') | Literal('NEITHER FAV. OR UNFAV. - VOLUNTEERED') | Literal('UNFAVORABLE') | Literal('DK / NEVER HEAR')
-poll_table_choice = poll_table_choice | Literal('DEFINITELY DECIDED WHO WILL VOTE FOR') | Literal('LEANING TOWARD SOMEONE') | Literal('STILL TRYING TO DECIDE')
-poll_table_choice = poll_table_choice | Literal('FOREIGN POLICY/NATIONAL SECURITY') | Literal('JOBS/ECONOMY') | Literal('IMMIGRATION') | Literal('BUDGET/NATIONAL DEBT') 
-poll_table_choice = poll_table_choice | Literal('HEALTH CARE') | Literal('SOCIAL ISSUES') | Literal('TAXES') | Literal('EDUCATION') | Literal('OTHER / DK')
-
-
-
-
-
- 
-
-percentage = digits + Suppress('%')
-
-table_header = Group(OneOrMore(poll_table_choice))
-string_list = Group(OneOrMore(string))
-
-quote = Group(QuotedString('"', multiline=True)) | Group(QuotedString('(', endQuoteChar=')', multiline=True))
-poll_question = Group(OneOrMore(quote))
-
-table_column = Group(date_yr + Group(OneOrMore(percentage)))
-table = Group(OneOrMore(table_column))
-table_full = Group(poll_question + table_header + table)
-
-page = Group(OneOrMore(table_full) + poll_footer)
-blocks   =  percentage | page | table_full  | table_header |  poll_footer | table  | date_yr   | Group(digits + '%')  |  string | Group(digits) | '\r\n' 
-group  = OneOrMore(blocks)
-
-    
-
+    if 'question_number' in item.keys():
+        print item['question_number']
+    if 'question_quote' in item.keys():
+        print item['question_quote']
