@@ -1,5 +1,5 @@
 from DewApi import app
-from models import generate_snapshot, PoliticalPoll, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
+from models import generate_snapshot, PoliticalPoll, Pollster, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
 
 
 import json
@@ -14,11 +14,43 @@ def hello():
 
 @app.route("/pollsters/")
 def pollsters():
-    return Response(json.dumps(""))
+    pollster_list = Pollster.query.all()
+    response_list = []
     
-@app.route("/pollsters/<pollster_slug>")
+    for pollster in pollster_list[0:10]:
+        
+        response_list.append({
+            'name' : pollster.name,
+            'url' : pollster.url(),
+            'group_type' : pollster.group_type,
+            'uuid' : pollster.uuid,
+            'count' : len(pollster.polls)
+        })
+    return Response(json.dumps(response_list), mimetype = 'text/json')
+    
+@app.route("/pollsters/<pollster_slug>/")
 def pollster_selcet(pollster_slug):
-    return Response(json.dumps(""), mimetype = "text/json")
+    print pollster_slug
+    pollster = Pollster.query.filter_by(slug = pollster_slug).first()
+    poll_list = []
+    
+    for poll in pollster.polls:
+        poll_list.append({
+          'pollster' : poll.pollster_str,
+          'start_date' : poll.start_date.strftime("%m-%d-%y"),
+          'end_date' : poll.end_date.strftime("%m-%d-%y"),
+          'url' : poll.url(),
+          'source_url' : poll.source_uri
+        })
+    response = {
+            'name' : pollster.name,
+            'url' : pollster.url(),
+            'group_type' : pollster.group_type,
+            'uuid' : pollster.uuid,
+            'count' : len(pollster.polls),
+            'polls' : poll_list
+    }
+    return Response(json.dumps(response), mimetype = "text/json")
     
 @app.route("/politicians/us/")
 def politician_all():

@@ -160,6 +160,7 @@ for poll in poll_list:
 			new_poll.pollster_list.append(new_pollster)
 			
 			new_pollster.set_dewhash()
+			new_pollster.dew_slug()
 		
 		
 		

@@ -311,6 +311,7 @@ survey_pollsters = db.Table('survey_pollsters',
 	db.Column('political_poll_id', db.Integer, db.ForeignKey('political_poll.id')),
 	db.Column('pollster_id', db.Integer, db.ForeignKey('political_pollster.id'))
 )
+
 class PoliticalPoll(db.Model):
 	__tablename__ = 'political_poll'
 	
@@ -341,16 +342,16 @@ class PoliticalPoll(db.Model):
 	source_id = db.Column(db.Integer)
 	source_uri = db.Column(db.String(256))
 
-	
 	def primary_pollster(self):
 		for pollster in self.pollster_list:
 			if pollster.group_type == "pollster":
 				return pollster
-	def slug(self):
+	def dew_slug(self):
 		return slugify(self.pollster_str + "_" + self.uuid[0:6]+ "_" + self.end_date.strftime("%m%d%y"))
+
 		
 	def url(self):
-		return "/pollsters/" + slugify(str(self.pollster_str)) + "/polls/" + self.slug() + "/"
+		return "/pollsters/" + slugify(str(self.pollster_str)) + "/polls/" + self.dew_slug() + "/"
 	def set_dewhash(self):
 		self.uuid = str(uuid.uuid1())
 		
@@ -364,7 +365,7 @@ class PoliticalPoll(db.Model):
 		
 	def __str__(self):
 		return (str(self.election_year) + " " + str(self.pollster_str) + " " + str(self.region) + " " + "\n") 
-		
+	
 class PoliticalPollQuestion(db.Model):
 	
 	__tablename__ = 'political_poll_question'
@@ -499,11 +500,20 @@ class Pollster(db.Model):
 	group_type = db.Column(db.String(60))
 	slug = db.Column(db.String(100))
 	
+	polls = db.relationship('PoliticalPoll', secondary = survey_pollsters, backref = db.backref('political_poll', lazy = 'dynamic'))
+	
 	uuid = db.Column(db.String(255))
 	dewhash = db.Column(db.String(255), unique = True)
 	
+	def dew_slug(self):
+		if self.slug:
+			return self.slug
+		else:
+			self.slug = slugify(self.name)
+			return self.slug
+	
 	def url(self):
-		return '/pollsters/' + self.slug + '/'
+		return '/pollsters/' + self.dew_slug() + '/'
 	
 	def set_dewhash(self):
 		"""Generates and saves the dewhash for deduping."""
