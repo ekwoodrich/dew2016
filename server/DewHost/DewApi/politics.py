@@ -1,4 +1,5 @@
 import csv
+import time, datetime
 
 def load_538_pollster_tsv(tsv_filename):
 
@@ -131,3 +132,5 @@ presidential_candidates_gop = [
         "Carson",
         "Graham"
 ]
+
+#election_day_president = time.struct_time(tm_year=2016, tm_mon=11, tm_mday=8, tm_hour=0, tm_min=0, tm_sec=0, tm_wday=0, tm_yday=0, tm_isdst=-1)

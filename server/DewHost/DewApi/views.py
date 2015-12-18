@@ -84,10 +84,10 @@ def politician_all():
         
     return Response(json.dumps(response_list), mimetype = "text/json")
     
-@app.route("/polls/")
-def polls():		
+@app.route("/polls/<page>")
+def polls(page = 1):		
     region = Region.query.filter_by(abv='US').first()
-    poll_list = PoliticalPoll.query.order_by(PoliticalPoll.start_date.desc()).limit(10)
+    poll_list = PoliticalPoll.query.order_by(PoliticalPoll.start_date.desc()).paginate(int(page), 10, False).items
     
     poll_list_json = []
     
