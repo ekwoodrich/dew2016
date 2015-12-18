@@ -491,6 +491,15 @@ class PollItem(db.Model):
 			self.set_dewhash()
 
 		self.dewhash = 'dewhash-' + dewhash.hexdigest()
+class FiveThirtyEightPollster(db.Model):
+	__tablename__ = 'five_thirty_eight_pollster'
+	
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(120))
+	rating = db.Column(db.String(10))
+	
+	data_json = db.Column(db.Text)
+	
 class Pollster(db.Model):
 	__tablename__ = 'political_pollster'
 	

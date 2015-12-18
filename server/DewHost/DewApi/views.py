@@ -28,6 +28,19 @@ def pollsters():
         })
     return Response(json.dumps(response_list), mimetype = 'text/json')
     
+@app.route("/pollsters/summary")
+def pollsters_summary():
+    pollster_str_list = []
+    pollster_list = Pollster.query.all()
+    
+    for pollster in pollster_list:
+        pollster_str_list.append(pollster.name)
+    response = {
+        'total_count' : len(pollster_list),
+        'pollsters' : pollster_str_list
+    }
+    return Response(json.dumps(response), mimetype = 'text/json')
+    
 @app.route("/pollsters/<pollster_slug>/")
 def pollster_selcet(pollster_slug):
     print pollster_slug
@@ -126,6 +139,10 @@ def polls():
         })
     return Response(json.dumps(poll_list_json), mimetype = "text/json")
     
+@app.route("/polls/<poll_slug>")
+def polls_select():	
+    pass
+    	
 @app.route("/politicians/us/<slug>")
 def politician_select(slug):
     politician = Politician.query.filter_by(slug = slug).first()
