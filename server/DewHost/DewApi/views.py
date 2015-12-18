@@ -1,5 +1,5 @@
 from DewApi import app
-from models import generate_snapshot, PoliticalPoll, Pollster, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
+from models import  PoliticalPoll, Pollster, PollUpdateReport, Politician, PollItem, Region, db, ElectionSummary, get_or_create, CandidateSummary
 
 
 import json
@@ -159,30 +159,18 @@ def politician_select(slug):
             'url' : politician.url()}), mimetype = "text/json")
     else:
         return "not found"   
-@app.route("/elections/us/presidential/snapshot")
-def us_pres_snapshot():
-    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
+@app.route("/elections/us/<office>/snapshot")
+def us_pres_snapshot(office):
+    region = Region.query.filter_by(iso = "US").first()
     
-@app.route("/elections/us/presidential/<party>/snapshot")
-def us_pres_party_snapshot(party):
-    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
+    return Response(json.dumps(region.generate_snapshot(seeking_office = office)), mimetype = "text/json")
     
-@app.route("/elections/us/senate/snapshot")
-def us_senate_snapshot():
-    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
+@app.route("/elections/us/<office>/<party>/snapshot")
+def us_pres_party_snapshot(office, party):
+    region = Region.query.filter_by(iso = "US").first()
     
-@app.route("/elections/us/senate/<party>/snapshot")
-def us_senate_party_snapshot(party):
-    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
-    
-@app.route("/elections/us/governor/snapshot")
-def us_gov_snapshot():
-    return Response(json.dumps(generate_snapshot()), mimetype = "text/json")
-    
-@app.route("/elections/us/governor/<party>/snapshot")
-def us_gov_party_snapshot(party):
-    return Response(json.dumps(generate_snapshot(party)), mimetype = "text/json")
-    
+    return Response(json.dumps(region.generate_snapshot(seeking_office = office, party = party)), mimetype = "text/json")
+
 @app.route("/admin/reset_polls")
 def reset_polls():
     return "Polls Reset"

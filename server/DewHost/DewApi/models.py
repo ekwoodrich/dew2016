@@ -566,6 +566,45 @@ class Region(db.Model):
 			return "National"
 		else:
 			return self.name
+				
+				
+	def generate_snapshot(self, seeking_office = "president", party = None):
+		
+		
+		politician_snapshot_list_dem = []
+		politician_snapshot_list_gop = []
+		region = self
+		
+		for party in ['dem', 'gop']:
+			politician_list = Politician.query.filter_by(seeking_office = seeking_office, party = party)
+			
+			for politician in politician_list:
+				if party == 'dem':
+					if not politician.last_name in presidential_candidates_dem:
+						continue
+				elif party == 'gop':
+					if not politician.last_name in presidential_candidates_gop:
+						continue
+						
+				
+				if party == 'dem':
+					politician_snapshot_list_dem.append(politician.recent_poll_values(region))
+						
+				elif party == 'gop':
+					politician_snapshot_list_gop.append(politician.recent_poll_values(region))
+						
+		return [{"party" : "dem", 
+				"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
+					"date" : date.today().strftime("%m-%d-%y"),
+					"list" : sorted(politician_snapshot_list_dem, 
+						key = lambda snapshot : snapshot['payload']['current_value'], 
+						reverse = True)}},
+				{"party" : "gop", 
+				"snapshot" : {"title"  : "GOP - US Presidential Race Snapshot",
+					"date" : date.today().strftime("%m-%d-%y"),
+					"list" : sorted(politician_snapshot_list_gop, 
+						key = lambda snapshot : snapshot['payload']['current_value'], 
+						reverse = True)}}]
 def generate_presidential_snapshot(session, region, force_new = False):
 	if not region:
 		summary_region = Region.query.filter_by(abv='US').first()
@@ -627,41 +666,4 @@ class Election():
 	def get_snapshot(party = None):
 		pass
 	
-def generate_snapshot(party = None):
-	
-	
-	politician_snapshot_list_dem = []
-	politician_snapshot_list_gop = []
-	region = Region.query.filter_by(iso = "US").first()
-	
-	for party in ['dem', 'gop']:
-		politician_list = Politician.query.filter_by(seeking_office = "president", party = party)
-		
-		for politician in politician_list:
-			if party == 'dem':
-				if not politician.last_name in presidential_candidates_dem:
-					continue
-			elif party == 'gop':
-				if not politician.last_name in presidential_candidates_gop:
-					continue
-					
-			
-			if party == 'dem':
-				politician_snapshot_list_dem.append(politician.recent_poll_values(region))
-					 
-			elif party == 'gop':
-				politician_snapshot_list_gop.append(politician.recent_poll_values(region))
-					 
-	return [{"party" : "dem", 
-			"snapshot" : {"title"  : "DEM - US Presidential Race Snapshot",
-				"date" : date.today().strftime("%m-%d-%y"),
-				"list" : sorted(politician_snapshot_list_dem, 
-					key = lambda snapshot : snapshot['payload']['current_value'], 
-					reverse = True)}},
-			{"party" : "gop", 
-			"snapshot" : {"title"  : "GOP - US Presidential Race Snapshot",
-				"date" : date.today().strftime("%m-%d-%y"),
-				"list" : sorted(politician_snapshot_list_gop, 
-					key = lambda snapshot : snapshot['payload']['current_value'], 
-					reverse = True)}}]
 					
