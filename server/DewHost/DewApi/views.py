@@ -159,15 +159,15 @@ def politician_select(slug):
             'url' : politician.url()}), mimetype = "text/json")
     else:
         return "not found"   
-@app.route("/elections/us/<office>/snapshot")
-def us_pres_snapshot(office):
-    region = Region.query.filter_by(iso = "US").first()
+@app.route("/elections/<region_str>/<office>/snapshot")
+def us_pres_snapshot(region_str, office):
+    region = Region.query.filter_by(iso = region_str.upper()).first()
     
     return Response(json.dumps(region.generate_snapshot(seeking_office = office)), mimetype = "text/json")
     
-@app.route("/elections/us/<office>/<party>/snapshot")
-def us_pres_party_snapshot(office, party):
-    region = Region.query.filter_by(iso = "US").first()
+@app.route("/elections/<region_str>/<office>/<party>/snapshot")
+def us_pres_party_snapshot(region_str, office, party):
+    region = Region.query.filter_by(iso = region_str.upper()).first()
     
     return Response(json.dumps(region.generate_snapshot(seeking_office = office, party = party)), mimetype = "text/json")
 
