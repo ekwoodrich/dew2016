@@ -12,9 +12,10 @@ from flask import Response
 def hello():
     return "Dewcaucus API"
 
-@app.route("/pollsters/")
-def pollsters():
-    pollster_list = Pollster.query.all()
+@app.route("/pollsters/<page>")
+def pollsters(page = 1):
+    pollster_list_all = Pollster.query.order_by(Pollster.name.asc())
+    pollster_list = pollster_list_all.paginate(int(page), 10, False).items
     response_list = []
     
     for pollster in pollster_list[0:10]:
@@ -26,7 +27,12 @@ def pollsters():
             'uuid' : pollster.uuid,
             'count' : len(pollster.polls)
         })
-    return Response(json.dumps(response_list), mimetype = 'text/json')
+        
+    next_url = ""
+    if pollster_list_all.paginate(int(page) + 1, 10, False).items:
+        next_url = "/pollsters/" + str(int(page) + 1)
+        
+    return Response(json.dumps({"next" : next_url, "response" : response_list}), mimetype = "text/json")
     
 @app.route("/pollsters/summary")
 def pollsters_summary():
@@ -64,10 +70,11 @@ def pollster_selcet(pollster_slug):
             'polls' : poll_list
     }
     return Response(json.dumps(response), mimetype = "text/json")
-    
-@app.route("/politicians/us/")
-def politician_all():
-    politician_list = Politician.query.all()
+
+@app.route("/politicians/us/<page>")
+def politician_all(page = 1):
+    politician_list_all = Politician.query.order_by(Politician.seeking_office.asc())
+    politician_list = politician_list_all.paginate(int(page), 10, False).items
     
     response_list = []
     
@@ -82,12 +89,19 @@ def politician_all():
             'region' : politician.region, 
             'url' : politician.url()})
         
-    return Response(json.dumps(response_list), mimetype = "text/json")
+        
+    next_url = ""
+    if politician_list_all.paginate(int(page) + 1, 10, False).items:
+        next_url = "/politicians/us/" + str(int(page) + 1)
+        
+    return Response(json.dumps({"next" : next_url, "response" : response_list}), mimetype = "text/json")
+
     
 @app.route("/polls/<page>")
 def polls(page = 1):		
     region = Region.query.filter_by(abv='US').first()
-    poll_list = PoliticalPoll.query.order_by(PoliticalPoll.start_date.desc()).paginate(int(page), 10, False).items
+    poll_list_all = PoliticalPoll.query.order_by(PoliticalPoll.start_date.desc())
+    poll_list = poll_list_all.paginate(int(page), 10, False).items
     
     poll_list_json = []
     
@@ -137,7 +151,12 @@ def polls(page = 1):
           'questions' : poll_question_list
             
         })
-    return Response(json.dumps(poll_list_json), mimetype = "text/json")
+    next_url = ""
+    if poll_list_all.paginate(int(page) + 1, 10, False).items:
+        next_url = "/polls/" + str(int(page) + 1)
+        
+    return Response(json.dumps({"next" : next_url, "response" : poll_list_json}), mimetype = "text/json")
+
     
 @app.route("/polls/<poll_slug>")
 def polls_select():	
