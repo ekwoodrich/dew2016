@@ -190,6 +190,27 @@ def us_pres_party_snapshot(region_str, office, party):
     
     return Response(json.dumps(region.generate_snapshot(seeking_office = office, party = party)), mimetype = "text/json")
 
+@app.route("/regions/<page>")
+def region_list(page = 1):
+    region_list_all = Region.query.order_by(Region.iso.asc())
+    region_list = region_list_all.paginate(int(page), 10, False).items
+    
+    region_list_json = []
+    
+    for region in region_list:
+        region_list_json.append({
+            'iso' : region.iso,
+            'name' : region.name,
+            'national' : region.national,
+            'abv' : region.abv
+        })    
+    
+    next_url = ""
+    if region_list_all.paginate(int(page) + 1, 10, False).items:
+        next_url = "/regions/" + str(int(page) + 1)
+        
+    return Response(json.dumps({"next" : next_url, "response" : region_list_json}), mimetype = "text/json")
+
 @app.route("/admin/reset_polls")
 def reset_polls():
     return "Polls Reset"
