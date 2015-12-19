@@ -32,7 +32,7 @@ end
 # unset irrelevant variables
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/eliot/Dev/github/dew2016/server/DewHost/venv"
+set -gx VIRTUAL_ENV "/home/eliot/Github/dew2016/server/DewHost/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
