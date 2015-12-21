@@ -64,6 +64,7 @@ class Politician(db.Model):
 	party = db.Column(db.String(20))
 	dewhash = db.Column(db.String(255), unique = True)
 	
+    
 	bio = db.Column(db.Text)
 	birthday = db.Column(db.DateTime)
 	website = db.Column(db.Text)
@@ -80,6 +81,8 @@ class Politician(db.Model):
 	polls = db.relationship('PoliticalPollQuestion', secondary = politician_polls, backref = 'politician', lazy = 'dynamic')
 	
 	 
+    def head_shot_url(self):
+        return "http://dewcaucus.com/static/"+ self.slug
 		
 	def encapsulate_payload(self, payload):
 				return {
@@ -511,6 +514,8 @@ class Pollster(db.Model):
 	
 	polls = db.relationship('PoliticalPoll', secondary = survey_pollsters, backref = db.backref('political_poll', lazy = 'dynamic'))
 	
+    info_json = db.Column(db.Text)
+    
 	uuid = db.Column(db.String(255))
 	dewhash = db.Column(db.String(255), unique = True)
 	
